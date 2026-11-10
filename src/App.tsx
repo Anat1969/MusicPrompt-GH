@@ -4,6 +4,8 @@ import { exportLibrary, importLibrary, useLibrary } from './logic/store';
 import Home from './pages/Home';
 import Create from './pages/Create';
 import Library from './pages/Library';
+import Login from './components/Login';
+import { runSync, signOut, useCloud } from './logic/cloud';
 
 const TABS = [{ id: 'create', he: 'יצירה' }, { id: 'library', he: 'ספרייה' }];
 const CHAT = 'https://claude.ai/code/session_018qeN1ABV3XafhuVdkBY9hc';
@@ -15,6 +17,8 @@ export default function App() {
   const menu = useRef<Menu>(null);
   const file = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState('');
+  const [login, setLogin] = useState(false);
+  const cloud = useCloud();
   const page = ['create', 'library'].includes(route.page) ? route.page : 'home';
 
   // חיווי "נשמר": מופיע בסרגל ובתוך כפתור הלוגו, ונעלם לבד
@@ -25,11 +29,14 @@ export default function App() {
     const m = menu.current;
     if (!m) return;
     m.items = [
+      ...(cloud.uid
+        ? [{ label: 'סנכרון עם הענן עכשיו', onSelect: () => void runSync() }, { label: `יציאה מהענן (${cloud.email})`, onSelect: () => void signOut() }]
+        : [{ label: 'כניסה לספרייה בענן', onSelect: () => setLogin(true) }]),
       { label: 'גיבוי הספרייה לקובץ', onSelect: () => exportLibrary() },
       { label: 'שחזור ספרייה מקובץ', onSelect: () => file.current?.click() },
     ];
-    m.status = status;
-  }, [status, lib.length]);
+    m.status = status || (cloud.uid ? (cloud.status === 'syncing' ? 'מסנכרן' : cloud.status === 'error' ? 'לא סונכרן' : 'שמור בענן') : '');
+  }, [status, lib.length, cloud.uid, cloud.status, cloud.email]);
 
   return (
     <div className="app-shell">
@@ -39,13 +46,14 @@ export default function App() {
           <nav className="tabs" aria-label="ניווט">
             {TABS.map((t) => <button key={t.id} type="button" className="tab" aria-current={page === t.id ? 'page' : undefined} onClick={() => go(t.id)}>{t.he}{t.id === 'library' && lib.length > 0 && <span className="num tab-n">{lib.length}</span>}</button>)}
           </nav>
-          <span className="saved" aria-live="polite">{status}</span>
+          <span className="saved" aria-live="polite">{status || (cloud.uid ? (cloud.status === 'syncing' ? 'מסנכרן' : cloud.status === 'error' ? 'לא סונכרן' : 'שמור בענן') : '')}</span>
           {createElement('ai-menu', { ref: menu, chat: CHAT })}
         </div>
       </header>
       {page === 'home' && <Home />}
       {page === 'create' && <Create route={route} onSaved={saved} />}
-      {page === 'library' && <Library route={route} onSaved={saved} />}
+      {page === 'library' && <Library route={route} onSaved={saved} onLogin={() => setLogin(true)} />}
+      {login && <Login onClose={() => setLogin(false)} />}
       <input ref={file} type="file" accept="application/json,.json" hidden onChange={async (e) => {
         const f = e.target.files?.[0]; e.target.value = '';
         if (!f) return;
