@@ -75,9 +75,81 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .voice-note { font-size: 11.5px; line-height: 1.35; color: var(--ink-soft); }
 
 /* מסך היצירה: קלט ביחס זהוב מול הפלט */
-.create { grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); }
+.create { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+
+/* מחוון השלבים: תמיד רואים באיזה שלב אני, ומה כבר נבחר. "הקודם" ו"הבא" במקום קבוע */
+.steps { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: stretch; }
+.steps-list { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 8px; align-items: center; text-align: start; padding: 6px 10px; color: var(--ink); background: #fff; }
+.step:hover { background: #F7F6F2; }
+.step-n { grid-row: 1 / span 2; width: 24px; height: 24px; display: grid; place-items: center; background: var(--ink); color: #fff; font-size: 12px; }
+.step-t { font-size: 13.5px; font-weight: 600; }
+.step-v { font-size: 12px; color: var(--ink-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.step.is-done .step-v { color: var(--ink-soft); }
+.step[aria-current="step"] { background: var(--ink); color: #fff; }
+.step[aria-current="step"] .step-v { color: rgba(255, 255, 255, .75); }
+.step[aria-current="step"] .step-n { outline: 2px solid #fff; }
+.steps-tools { display: flex; gap: 8px; align-items: center; }
+.btn.nav { width: 84px; padding-inline: 0; }
+
+/* השאלה המבודדת */
+.c-in { display: flex; flex-direction: column; gap: 8px; }
+.q { display: flex; flex-direction: column; gap: 8px; flex: 0 1 auto; min-height: 0; overflow: auto; padding: 2px; }
+.q h1 { margin: 0; font-size: clamp(24px, 2.6vw, 38px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.q-kicker { margin: 0; font-size: 12.5px; color: var(--ink-mute); display: flex; align-items: center; gap: 6px; }
+.q-how { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); max-width: 62em; }
+.q-how b { color: var(--ink); }
+.q-sug { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.q-skip { margin: 0; font-size: 12.5px; color: var(--ink-mute); }
+.q-sub { display: grid; gap: 6px; padding-top: 4px; border-top: 1px solid var(--rule-soft); }
+.q-start { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip.taste { box-shadow: inset 0 -3px 0 #C9A800, var(--shadow-1); }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.opt { display: grid; gap: 2px; text-align: start; padding: 8px 12px; min-width: 112px; max-width: 230px; background: var(--rule-soft); color: var(--ink); }
+.opt:hover { background: #E7E6E1; }
+.opt strong { font-size: 15.5px; font-weight: 600; }
+.opt span { font-family: var(--mono); font-size: 11px; line-height: 1.3; color: var(--ink-soft); text-align: left; }
+.opt[aria-pressed="true"] span { color: rgba(255, 255, 255, .78); }
+.opt.is-sug { box-shadow: inset 0 -4px 0 var(--marker), var(--shadow-1); }
+.opts .play { align-self: center; margin-inline-start: 8px; }
+
+/* החמשה כבחירה */
+.c-staff { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; border-top: 1px solid var(--rule); padding-top: 8px; flex: 1 1 0; min-height: 150px; max-height: 440px; margin-top: auto; }
+.staff.is-live { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.staff.is-live.is-drag { cursor: grabbing; }
+.staff.is-live .staff-path { animation: none; stroke-dasharray: none; stroke-width: 2.4; opacity: .9; pointer-events: none; }
+.staff.is-live .staff-note { stroke-width: 2.5; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(26, 26, 24, .3)); }
+.staff.is-live .staff-tick { opacity: .35; }
+.staff-band { fill: #FFF9D6; }
+.staff-row.is-focus .staff-name { font-weight: 700; fill: var(--ink); }
+.staff-row.is-focus .staff-rule { opacity: .6; }
+.staff-ghost circle { fill: #fff; stroke-width: 2.5; stroke-dasharray: 3 3; pointer-events: none; }
+.staff-ghost text { pointer-events: none; }
+.staff-how { margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
+.staff-how b { color: var(--ink); }
+
+/* כך הפרומפט נבנה: שורה לכל שלב, עברית מול אנגלית */
+.build { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
+.build thead th { font-size: 11px; font-weight: 400; color: var(--ink-mute); text-align: start; padding: 0 6px 4px; }
+.build thead th:first-child { width: 70px; }
+.build thead th:nth-child(2) { width: 36%; }
+.build tbody tr:last-child td { width: auto; }
+.build thead th:last-child { text-align: left; }
+.build tbody tr { cursor: pointer; border-top: 1px solid var(--rule-soft); height: 30px; }
+.build tbody tr:hover { background: #F7F6F2; }
+.build tbody th { font-weight: 600; text-align: start; padding: 4px 6px; white-space: nowrap; }
+.build tbody th .sw { margin-inline-end: 6px; }
+.sw-desc { background: #fff; outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
+.build td { padding: 4px 6px; line-height: 1.35; vertical-align: middle; }
+.build td[dir="ltr"] { font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); text-align: left; }
+.build tr.is-off td { color: var(--ink-mute); }
+.build tr.is-now { background: #FFF9D6; box-shadow: inset 3px 0 0 #E8C400; }
+.he-read { margin: 0; font-size: 13.5px; line-height: 1.5; padding: 6px 10px; background: var(--rule-soft); }
+.o-head { justify-content: flex-start; }
+.o-head h2 { margin-inline-end: auto; }
+.o-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--rule); padding-top: 8px; }
+.o-tabs .num { font-size: 11px; opacity: .7; }
 .c-in, .c-out, .l-list, .l-detail { background: #fff; box-shadow: var(--shadow-1); padding: clamp(10px, 1.2vw, 16px); display: flex; flex-direction: column; gap: clamp(6px, 1vh, 12px); min-height: 0; }
-.c-in { overflow: auto; }
 .c-head h1, .o-head h2, .l-tools h1 { margin: 0; font-size: clamp(20px, 1.9vw, 26px); font-weight: 700; letter-spacing: -0.01em; }
 .c-head p { margin: 2px 0 0; font-size: 14px; color: var(--ink-soft); }
 .rows { display: grid; }
@@ -175,7 +247,26 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 
 /* מסך נמוך: יורדים קודם משפטי משנה וריווח, לא כותרות ונתונים */
 @media (max-height: 800px) and (min-width: 901px) {
-  .c-head p { display: none; }
+  .q-skip, .build thead { display: none; }
+  .q h1 { font-size: 24px; }
+  .q-how { font-size: 13.5px; }
+  .opt { padding: 6px 10px; }
+  .opt strong { font-size: 14.5px; }
+  .q { gap: 5px; }
+  .q-kicker { font-size: 12px; }
+  .opts { gap: 6px; }
+  .opt { min-width: 96px; }
+  .opt span { font-size: 10.5px; }
+  .o-tabs .c-why { display: none; }
+  .o-blocks .cb-text[rows="4"] { height: 64px; }
+  .build td, .build tbody th { padding: 2px 6px; }
+  .build { font-size: 12px; }
+  .build td[dir="ltr"] { font-size: 11px; }
+  .he-read { font-size: 12.5px; padding: 4px 8px; }
+  .c-out { gap: 6px; }
+  .staff-how { font-size: 12px; line-height: 1.45; }
+  .build tbody tr { height: 26px; }
+  .cb-hint { display: none; }
   .row { min-height: 34px; padding: 3px 0; }
   .chip { padding: 3px 8px; font-size: 12.5px; }
   .row-chips { gap: 4px; }
@@ -186,12 +277,18 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 }
 @media (max-width: 1366px) and (min-width: 901px) {
   .row { grid-template-columns: 84px minmax(0, 1fr); }
-  .create { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); }
 }
 @media (max-width: 900px) {
   .create, .library { grid-template-columns: minmax(0, 1fr); }
   .app-shell { height: auto; min-height: 100dvh; overflow: visible; }
-  .c-in { overflow: visible; }
+  .c-in { display: flex; flex-direction: column; }
+  .q { overflow: visible; }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .steps-list { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .step { flex: 0 0 104px; }
+  .steps-tools { justify-content: space-between; }
+  .c-staff { flex: none; max-height: none; }
+  .c-staff .staff { height: 230px; }
   .l-items { max-height: 42vh; }
   .o-blocks { overflow: visible; }
   .d-body { grid-template-columns: minmax(0, 1fr); }

@@ -1,5 +1,5 @@
 // MusicPrompt-GH ("פרטיטורה"): ליטוש חכם של פרומפט ל-Suno.
-// מקבל תיאור חופשי בעברית, בחירות ופרומפט בסיס, ומחזיר סגנון באנגלית, מילים, כותרת, רשימת "בלי", ומשפט הסבר בעברית.
+// מקבל תיאור חופשי בעברית, בחירות ופרומפט בסיס, ומחזיר סגנון באנגלית ותרגום שלו לעברית, מילים, כותרת, רשימת "בלי", ומשפט הסבר בעברית.
 // Gemini החינמי (GEMINI_API_KEY) קודם, Claude (ANTHROPIC_API_KEY) רק כגיבוי. פלט JSON מובנה, מגבלת קצב. הפונקציה לא שומרת דבר.
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
@@ -22,7 +22,7 @@ function limited(ip: string) {
 
 const SYSTEM = `You are a music producer who writes prompts for Suno (AI music generator, Custom mode).
 The user describes in Hebrew what they want to hear and may have picked options. You get a baseline prompt built from the picks.
-Return JSON with five fields:
+Return JSON with six fields:
 
 1. style: the "Style of Music" field. English only. Comma-separated descriptors, 200 to 600 characters, never above 900.
    Order: genre and era, mood, tempo with BPM, vocal type (or "instrumental, no vocals"), lead instruments, production and mix character, structure hints.
@@ -36,10 +36,12 @@ Return JSON with five fields:
 4. exclude: the "Exclude Styles" field. English, comma-separated, 0 to 5 items that would spoil this request. Empty string if nothing.
 5. note: ONE sentence in natural Hebrew, up to 20 words, telling the user what you translated or added, e.g. which name you replaced with which traits. No exclamation marks, no emoji.
 
+6. styleHe: a faithful Hebrew translation of the style field, same order and same content, so the user can read what was sent. Natural Hebrew, comma-separated, musical terms translated (BPM as "פעימות בדקה"). No additions.
+
 Do not invent facts. Output only the JSON.`;
 
-const SCHEMA_CLAUDE = { type: 'object', additionalProperties: false, required: ['style', 'lyrics', 'title', 'exclude', 'note'], properties: { style: { type: 'string' }, lyrics: { type: 'string' }, title: { type: 'string' }, exclude: { type: 'string' }, note: { type: 'string' } } };
-const SCHEMA_GEMINI = { type: 'OBJECT', required: ['style', 'lyrics', 'title', 'exclude', 'note'], properties: { style: { type: 'STRING' }, lyrics: { type: 'STRING' }, title: { type: 'STRING' }, exclude: { type: 'STRING' }, note: { type: 'STRING' } } };
+const SCHEMA_CLAUDE = { type: 'object', additionalProperties: false, required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'string' }, style: { type: 'string' }, lyrics: { type: 'string' }, title: { type: 'string' }, exclude: { type: 'string' }, note: { type: 'string' } } };
+const SCHEMA_GEMINI = { type: 'OBJECT', required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'STRING' }, style: { type: 'STRING' }, lyrics: { type: 'STRING' }, title: { type: 'STRING' }, exclude: { type: 'STRING' }, note: { type: 'STRING' } } };
 
 const GEMINI_MODELS = [...new Set([Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'])];
 
@@ -116,6 +118,7 @@ Deno.serve(async (req) => {
     title: clip(r.title, 80).trim(),
     exclude: clip(r.exclude, 200).trim(),
     note: clip(r.note, 220).trim(),
+    styleHe: clip(r.styleHe, 1200).replace(/\s+/g, ' ').trim(),
   });
 
   const gk = Deno.env.get('GEMINI_API_KEY');

@@ -2,11 +2,12 @@
 // he: מה שרואים בממשק. en: מה שנכנס לפרומפט של Suno, שמבין אנגלית טוב יותר.
 
 export type GroupId = 'genre' | 'mood' | 'tempo' | 'voice' | 'inst' | 'use' | 'lang';
-export type Option = { id: string; he: string; en: string; bpm?: number; minor?: boolean };
+export type Option = { id: string; he: string; en: string; bpm?: number; minor?: boolean; gloss?: string };
 export type Group = {
   id: GroupId;
   he: string;        // שם השורה
   ask: string;       // השאלה שהשורה עונה עליה
+  how: string;       // מה הבחירה משנה בפרומפט
   color: string;     // צבע הנושא: אותו צבע בבורר, בחמשה ובמקרא
   max: number;       // כמה אפשר לבחור
   staff: boolean;    // האם השורה היא קו בחמשה
@@ -15,7 +16,7 @@ export type Group = {
 
 export const GROUPS: Group[] = [
   {
-    id: 'genre', he: 'סגנון', ask: 'מאיזה עולם המוזיקה', color: '#534AB7', max: 2, staff: true,
+    id: 'genre', he: 'סגנון', ask: 'מאיזה עולם המוזיקה', how: 'הסגנון נכנס ראשון לפרומפט, וקובע את כל השאר. שתי בחירות יוצרות שילוב בין שני עולמות.', color: '#534AB7', max: 2, staff: true,
     options: [
       { id: 'classical', he: 'קלאסי', en: 'classical orchestral' },
       { id: 'cinematic', he: 'קולנועי', en: 'cinematic film score' },
@@ -31,7 +32,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'mood', he: 'אווירה', ask: 'מה מרגישים', color: '#D85A30', max: 2, staff: true,
+    id: 'mood', he: 'אווירה', ask: 'מה מרגישים', how: 'האווירה מוסיפה לפרומפט את הרגש. היא משנה את ההרמוניה ואת אופי הנגינה, לא את הכלים.', color: '#D85A30', max: 2, staff: true,
     options: [
       { id: 'calm', he: 'רגוע', en: 'calm, peaceful' },
       { id: 'intimate', he: 'אינטימי', en: 'intimate, warm' },
@@ -46,7 +47,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'tempo', he: 'קצב', ask: 'כמה מהר', color: '#BA7517', max: 1, staff: true,
+    id: 'tempo', he: 'קצב', ask: 'כמה מהר', how: 'הקצב נכנס לפרומפט כמספר פעימות בדקה. אפשר לשמוע אותו לפני שבוחרים.', color: '#BA7517', max: 1, staff: true,
     options: [
       { id: 't60', he: 'איטי מאוד', en: 'very slow tempo, 60 BPM', bpm: 60 },
       { id: 't80', he: 'איטי', en: 'slow tempo, 80 BPM', bpm: 80 },
@@ -57,7 +58,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'voice', he: 'קול', ask: 'מי שר, אם בכלל', color: '#378ADD', max: 1, staff: true,
+    id: 'voice', he: 'קול', ask: 'מי שר, אם בכלל', how: 'הקול קובע אם יש שירה ומי שר. "בלי מילים" מוסיף לפרומפט הוראה מפורשת בלי שירה, ושדה המילים נשאר ריק.', color: '#378ADD', max: 1, staff: true,
     options: [
       { id: 'instrumental', he: 'בלי מילים', en: 'instrumental, no vocals' },
       { id: 'female', he: 'זמרת', en: 'female vocals' },
@@ -68,7 +69,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'inst', he: 'כלים', ask: 'מה מנגן', color: '#1D9E75', max: 4, staff: true,
+    id: 'inst', he: 'כלים', ask: 'מה מנגן', how: 'הכלים נכנסים לפרומפט כרשימה של כלים מובילים. עד 4, כדי ש-Suno לא יתפזר.', color: '#1D9E75', max: 4, staff: true,
     options: [
       { id: 'piano', he: 'פסנתר', en: 'piano' },
       { id: 'strings', he: 'כלי קשת', en: 'string section' },
@@ -85,17 +86,17 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'use', he: 'פס קול ל', ask: 'מתי מקשיבים', color: '#1A1A18', max: 1, staff: false,
+    id: 'use', he: 'פס קול ל', ask: 'מתי מקשיבים', how: 'השימוש מוסיף לפרומפט הוראות מבנה: יציב לרקע, בנייה הדרגתית לסרטון, מרווח למנוחה.', color: '#1A1A18', max: 1, staff: false,
     options: [
-      { id: 'work', he: 'עבודה וריכוז', en: 'unobtrusive background music, steady, no sudden changes' },
-      { id: 'walk', he: 'הליכה', en: 'steady groove for walking' },
-      { id: 'video', he: 'סרטון או מצגת', en: 'clear intro, gradual build, clean ending' },
-      { id: 'rest', he: 'מנוחה', en: 'slowly evolving, minimal, spacious' },
-      { id: 'evening', he: 'ערב עם אנשים', en: 'warm groove, conversational volume' },
+      { id: 'work', gloss: 'מוזיקת רקע יציבה, בלי שינויים פתאומיים', he: 'עבודה וריכוז', en: 'unobtrusive background music, steady, no sudden changes' },
+      { id: 'walk', gloss: 'מקצב יציב להליכה', he: 'הליכה', en: 'steady groove for walking' },
+      { id: 'video', gloss: 'פתיחה ברורה, בנייה הדרגתית וסיום נקי', he: 'סרטון או מצגת', en: 'clear intro, gradual build, clean ending' },
+      { id: 'rest', gloss: 'מתפתח לאט, מינימלי ומרווח', he: 'מנוחה', en: 'slowly evolving, minimal, spacious' },
+      { id: 'evening', gloss: 'מקצב חם, בעוצמה של שיחה', he: 'ערב עם אנשים', en: 'warm groove, conversational volume' },
     ],
   },
   {
-    id: 'lang', he: 'שפת המילים', ask: 'באיזו שפה שרים', color: '#1A1A18', max: 1, staff: false,
+    id: 'lang', he: 'שפת המילים', ask: 'באיזו שפה שרים', how: 'השפה מצטרפת לקול בפרומפט, וקובעת באיזו שפה ייכתבו המילים.', color: '#1A1A18', max: 1, staff: false,
     options: [
       { id: 'he', he: 'עברית', en: 'Hebrew' },
       { id: 'en', he: 'אנגלית', en: 'English' },
@@ -123,3 +124,23 @@ export const PRESETS: Preset[] = [
   { id: 'p-rio', title: 'אחר צהריים בריו', sel: { genre: ['bossa'], mood: ['dreamy'], tempo: ['t100'], voice: ['duet'], inst: ['acoustic', 'flute'], use: ['evening'], lang: ['pt'] } },
   { id: 'p-drive', title: 'נסיעה מהירה', sel: { genre: ['electronic', 'pop'], mood: ['energetic'], tempo: ['t126'], voice: ['band'], inst: ['synth', 'drums'], lang: ['en'] } },
 ];
+
+// הצעות: מה בדרך כלל מתאים לסגנון שנבחר. אלה נקודות פתיחה, לא כללים, ולכן הן רק מסומנות ולא נבחרות לבד.
+export const SUGGEST: Record<string, Partial<Record<GroupId, string[]>>> = {
+  classical: { mood: ['calm', 'dramatic', 'inspiring'], tempo: ['t60', 't80'], voice: ['instrumental', 'choir'], inst: ['piano', 'strings', 'cello', 'violin'], use: ['work', 'rest'] },
+  cinematic: { mood: ['dramatic', 'inspiring', 'mysterious'], tempo: ['t80', 't100'], voice: ['instrumental', 'choir'], inst: ['strings', 'piano', 'drums'], use: ['video'] },
+  ambient: { mood: ['calm', 'dreamy', 'mysterious'], tempo: ['t60'], voice: ['instrumental'], inst: ['synth', 'piano', 'harp'], use: ['rest', 'work'] },
+  jazz: { mood: ['intimate', 'nostalgic', 'melancholic'], tempo: ['t80', 't100'], voice: ['female', 'male', 'instrumental'], inst: ['sax', 'piano', 'drums'], use: ['evening'] },
+  bossa: { mood: ['dreamy', 'intimate', 'uplifting'], tempo: ['t100'], voice: ['female', 'duet'], inst: ['acoustic', 'flute', 'piano'], use: ['evening'] },
+  folk: { mood: ['intimate', 'nostalgic', 'inspiring'], tempo: ['t80', 't100'], voice: ['female', 'male', 'duet'], inst: ['acoustic', 'violin', 'flute'], use: ['walk', 'evening'] },
+  med: { mood: ['uplifting', 'nostalgic', 'energetic'], tempo: ['t110', 't126'], voice: ['female', 'male', 'band'], inst: ['oud', 'acoustic', 'violin', 'drums'], use: ['walk', 'evening'] },
+  pop: { mood: ['uplifting', 'energetic', 'inspiring'], tempo: ['t110', 't126'], voice: ['female', 'male', 'band'], inst: ['synth', 'acoustic', 'drums'], use: ['walk'] },
+  lofi: { mood: ['calm', 'nostalgic', 'dreamy'], tempo: ['t80'], voice: ['instrumental'], inst: ['piano', 'synth', 'drums'], use: ['work'] },
+  electronic: { mood: ['energetic', 'mysterious', 'dreamy'], tempo: ['t126', 't150'], voice: ['instrumental', 'female'], inst: ['synth', 'drums'], use: ['walk'] },
+  rock: { mood: ['energetic', 'dramatic'], tempo: ['t126', 't150'], voice: ['male', 'band'], inst: ['electric', 'drums'], use: ['walk'] },
+};
+export function suggested(sel: Selection, gid: GroupId): string[] {
+  const out: string[] = [];
+  for (const g of sel.genre ?? []) for (const id of SUGGEST[g]?.[gid] ?? []) if (!out.includes(id)) out.push(id);
+  return out;
+}

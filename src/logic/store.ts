@@ -14,15 +14,16 @@ export type Song = Prompt & {
   loved: boolean;
   audioName: string;     // ריק: אין קובץ שמע
   engine: 'local' | 'gemini' | 'claude';
+  styleHe?: string;      // הסגנון בעברית, לקריאה
   updatedAt?: number;    // לסנכרון: הגרסה החדשה מנצחת
   synced?: boolean;      // כבר קיים בענן. שיר כזה שנעלם מהענן נמחק במכשיר אחר
 };
 
-export type Draft = { desc: string; words: string; sel: Selection; out: Prompt | null; note: string; engine: Song['engine'] };
+export type Draft = { desc: string; words: string; sel: Selection; out: Prompt | null; note: string; styleHe: string; engine: Song['engine'] };
 
 const K_LIB = 'musicprompt.library.v1';
 const K_DRAFT = 'musicprompt.draft.v1';
-export const EMPTY_DRAFT: Draft = { desc: '', words: '', sel: {}, out: null, note: '', engine: 'local' };
+export const EMPTY_DRAFT: Draft = { desc: '', words: '', sel: {}, out: null, note: '', styleHe: '', engine: 'local' };
 
 const read = <T,>(k: string, fallback: T): T => {
   try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fallback; } catch { return fallback; }
