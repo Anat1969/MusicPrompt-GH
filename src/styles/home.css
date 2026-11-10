@@ -1,0 +1,43 @@
+/* דף בית שמעורר השראה (סעיף 4 בסקיל): תובנה, אובייקט חוויתי אחד, בעיה-פתרון-תובנה, מפת תוכן ושכבת מוזיאון. רכיב: Home.jsx. נלקח מ-OMEK-GH, MIVCHAN-GH ו-CHORIM-GH, 06.11.2026. */
+.home { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr); grid-template-rows: minmax(0, 1fr) auto auto; overflow: auto; }
+.home > * { min-width: 0; }
+.h-hero { display: flex; flex-direction: column; justify-content: center; gap: clamp(8px, 1.4vh, 16px); padding: clamp(8px, 2vw, 32px); }
+.h-kicker { font-family: var(--mono), var(--font); font-size: 12px; letter-spacing: .06em; color: var(--ink-mute); margin: 0; }
+.h-title { margin: 0; font-size: clamp(28px, 3.4vw, 50px); line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; }
+.h-title .num { font-size: 1.05em; }
+.h-explain { margin: 0; font-size: clamp(15px, 1.35vw, 19px); line-height: 1.6; color: var(--ink-soft); max-width: 36em; }
+.h-tones { display: grid; gap: 6px; margin: 4px 0; }
+.h-tone { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 14px; line-height: 1.5; padding: 6px 10px; border-inline-start: 3px solid; background: #fff; box-shadow: var(--shadow-1); }
+.h-tone b { font-family: var(--mono), var(--font); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+.h-tone.t-problem { border-color: var(--cut); } .h-tone.t-problem b { color: var(--cut); }
+.h-tone.t-solution { border-color: var(--bank); } .h-tone.t-solution b { color: var(--bank-deep); }
+.h-tone.t-insight { border-color: #E8C400; } .h-tone.t-insight b { color: #8a6d00; }
+.h-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.h-cta .btn { font-size: 15px; padding: 12px 20px; }
+.h-cta .go { background: var(--ink); color: #fff; }
+.h-stage { position: relative; background: #fff; box-shadow: var(--shadow-1); min-height: 320px; display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; }
+.h-stage svg.obj { width: 100%; height: 100%; display: block; }
+.h-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 14px 10px; border-top: 1px solid var(--rule-soft); font-size: 12.5px; align-items: center; }
+.h-legend .lg { display: inline-flex; align-items: center; gap: 6px; cursor: default; padding: 3px 6px; transition: background .15s; }
+.h-legend .lg.is-on { background: #F4F3EF; font-weight: 600; }
+.h-legend .sw { width: 12px; height: 12px; display: inline-block; }
+.h-hover { position: absolute; top: 12px; inset-inline-start: 14px; background: rgba(255,255,255,.94); box-shadow: var(--shadow-2); padding: 8px 12px; font-size: 13px; pointer-events: none; max-width: 70%; }
+.h-hover strong { font-size: 15px; }
+.h-cards { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.h-card { text-align: start; padding: 14px 16px; background: #fff; color: var(--ink); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: end; }
+.h-card .label { grid-column: 1 / -1; margin: 0; }
+.h-card strong { font-size: 18px; }
+.h-card .h-card-n { font-size: clamp(22px, 2.2vw, 30px); grid-row: 2 / span 2; grid-column: 2; align-self: center; }
+.h-card span.d { font-size: 13px; color: var(--ink-mute); }
+.h-museum { grid-column: 1 / -1; display: grid; grid-template-columns: 1.3fr 0.9fr 1fr; gap: 12px; align-items: stretch; }
+.h-quote, .h-haiku, .h-city { background: #fff; box-shadow: var(--shadow-1); padding: 12px 16px; margin: 0; }
+.h-quote blockquote { margin: 0 0 4px; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(16px, 1.4vw, 20px); line-height: 1.45; }
+.h-haiku p { margin: 0; font-family: "Frank Ruhl Libre", var(--font); font-size: 15px; line-height: 1.7; }
+.h-city p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); }
+.h-museum .label { display: block; margin: 0 0 4px; }
+.h-foot { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--ink-mute); text-align: center; padding-bottom: 4px; }
+@media (max-width: 900px) {
+  .home { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .h-stage { min-height: 300px; height: 52vh; }
+  .h-cards, .h-museum { grid-template-columns: minmax(0, 1fr); }
+}
