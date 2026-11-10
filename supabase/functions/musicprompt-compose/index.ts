@@ -43,33 +43,41 @@ Do not invent facts. Output only the JSON.`;
 const SCHEMA_CLAUDE = { type: 'object', additionalProperties: false, required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'string' }, style: { type: 'string' }, lyrics: { type: 'string' }, title: { type: 'string' }, exclude: { type: 'string' }, note: { type: 'string' } } };
 const SCHEMA_GEMINI = { type: 'OBJECT', required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'STRING' }, style: { type: 'STRING' }, lyrics: { type: 'STRING' }, title: { type: 'STRING' }, exclude: { type: 'STRING' }, note: { type: 'STRING' } } };
 
-const GEMINI_MODELS = [...new Set([Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'])];
+// שני המודלים הראשיים רצים במקביל, והראשון שעונה מנצח. נלמד מהיומן (10.11.2026): gemini-flash-latest עמוס,
+// ומחזיר 503 רק אחרי 15 עד 20 שניות, ורק אז התחיל המודל הקל. במקביל, התשובה מגיעה בזמן של המהיר מהשניים.
+// בלי thinkingConfig: המודל הקל דוחה אותו ב-400.
+const FAST = [Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+const BACKUP = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+
+async function askGemini(key: string, model: string, user: string, ms: number) {
+  const started = Date.now();
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
+        generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA_GEMINI, temperature: 0.8 },
+      }),
+      signal: AbortSignal.timeout(ms),
+    });
+    if (!r.ok) throw new Error(`Gemini ${model} ${r.status}`);
+    const j = await r.json();
+    const text = j?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';
+    const out = JSON.parse(text);
+    if (!out?.style) throw new Error(`Gemini ${model} empty`);
+    console.log('musicprompt-compose ok', model, Date.now() - started, 'ms');
+    return out;
+  } catch (err) {
+    console.error('musicprompt-compose try', model, Date.now() - started, 'ms', String((err as Error).message ?? err));
+    throw err;
+  }
+}
 
 async function viaGemini(key: string, user: string) {
-  let last: unknown;
-  for (const model of GEMINI_MODELS) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ role: 'user', parts: [{ text: user }] }],
-          generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA_GEMINI, temperature: 0.8 },
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
-      if (!r.ok) throw Object.assign(new Error(`Gemini ${model} ${r.status}`), { status: r.status });
-      const j = await r.json();
-      const text = j?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';
-      return JSON.parse(text);
-    } catch (err) {
-      last = err;
-      const st = (err as { status?: number }).status;
-      if (st === 400 || st === 401 || st === 403) break;
-    }
-  }
-  throw last;
+  try { return await Promise.any([...new Set(FAST)].map((m) => askGemini(key, m, user, 28000))); } catch { /* שניהם נכשלו: גיבוי */ }
+  return await Promise.any(BACKUP.map((m) => askGemini(key, m, user, 15000)));
 }
 
 async function viaClaude(key: string, user: string) {

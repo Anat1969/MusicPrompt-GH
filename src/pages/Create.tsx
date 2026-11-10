@@ -23,6 +23,14 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
   const lib = useLibrary();
   const my = useMemo(() => taste(lib), [lib]);
   const [busy, setBusy] = useState(false);
+  const [secs, setSecs] = useState(0);
+  // שעון המתנה לליטוש: בלי חיווי, המתנה של חצי דקה נראית כמו תקלה
+  useEffect(() => {
+    if (!busy) return;
+    setSecs(0);
+    const t = setInterval(() => setSecs((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [busy]);
   const [error, setError] = useState('');
   const [polishedSig, setPolishedSig] = useState('');
   const [saved, setSaved] = useState('');
@@ -229,7 +237,8 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
                 <button type="button" className="press chip" onClick={backToLocal}>חזרה לפרומפט מהבחירות</button>
               </p>
             )}
-            {draft.note && polished && <p className="msg msg-solution"><b>מה הליטוש עשה:</b> {draft.note}</p>}
+            {busy && <p className="msg msg-insight" role="status" data-testid="waiting"><b>הליטוש בעבודה, <span className="num">{secs}</span> שניות.</b> בדרך כלל עד 15 שניות, ולפעמים עד דקה כשהמודל החינמי עמוס. הפרומפט מהבחירות נשאר כאן בינתיים.</p>}
+            {draft.note && polished && !busy && <p className="msg msg-solution"><b>מה הליטוש עשה:</b> {draft.note}</p>}
             {error && <p className="msg msg-problem" role="alert">{error}</p>}
             <div className="o-tabs" role="tablist" aria-label="שדות להעתקה ל-Suno">
               {([['style', 'הפרומפט המלא'], ['lyrics', instrumental ? 'מילים: אין' : 'מילים'], ['meta', 'כותרת ובלי']] as const).map(([id, he], i) => (
@@ -262,7 +271,7 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
 
         <footer className="o-actions">
           <button type="button" className="press btn" onClick={runPolish} disabled={busy || empty}
-            title="מודל שפה מתרגם את התיאור החופשי למונחים ש-Suno מבין, מעשיר את הפרומפט, וכותב מילים אם ביקשת קול">{busy ? 'מלטש' : 'ליטוש חכם'}</button>
+            title="מודל שפה מתרגם את התיאור החופשי למונחים ש-Suno מבין, מעשיר את הפרומפט, וכותב מילים אם ביקשת קול">{busy ? `מלטש, ${secs}` : 'ליטוש חכם'}</button>
           <button type="button" className="press btn go" onClick={copyAndOpen} disabled={empty || !out.style} title="מעתיק את הפרומפט המלא ופותח את Suno בלשונית חדשה. את המילים והכותרת מעתיקים מכאן אחר כך.">{copied ? 'הועתק. Suno נפתח' : 'העתקה ופתיחת Suno'}</button>
           <button type="button" className="press btn" onClick={save} disabled={empty || !!saved}>{saved ? 'נשמר' : 'שמירה בספרייה'}</button>
           {saved && <button type="button" className="press btn" onClick={() => go('library', { id: saved })}>מעבר לספרייה</button>}

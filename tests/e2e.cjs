@@ -17,7 +17,7 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     const p = await ctx.newPage();
     await p.route('**/appofapp-gh.vercel.app/**', (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body: MENU }));
     let aiCalls = 0, aiFail = false;
-    await p.route('**/functions/v1/musicprompt-compose', (r) => { aiCalls++; return aiFail ? r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'הליטוש החכם לא זמין כרגע.' }) }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(AI) }); });
+    await p.route('**/functions/v1/musicprompt-compose', async (r) => { aiCalls++; await new Promise((res) => setTimeout(res, 1200)); return aiFail ? r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'הליטוש החכם לא זמין כרגע.' }) }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(AI) }); });
     await ctx.route('https://suno.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: 'suno' }));
     const errors = [];
     p.on('pageerror', (e) => errors.push(e.message));
@@ -100,6 +100,8 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     // ליטוש חכם
     await p.locator('#desc').fill('כמו שיר ישן של זמר אהוב');
     await p.getByRole('button', { name: 'ליטוש חכם' }).click();
+    await p.locator('[data-testid=waiting]').waitFor({ timeout: 1000 }).catch(() => {});
+    ok(await p.locator('[data-testid=waiting]').isVisible(), 'ליטוש חכם: חיווי המתנה עם שעון בזמן העבודה');
     await p.locator('.tag.e-gemini').waitFor();
     ok(aiCalls === 1 && (await p.locator('[data-testid=style] textarea').inputValue()) === AI.style, 'ליטוש חכם: הסגנון הוחלף בתוצאה');
     ok((await p.locator('[data-testid=style-he]').innerText()).includes('פופ פולק ישראלי') && (await p.locator('.msg-solution').innerText()).includes('תרגמתי'), 'ליטוש חכם: תרגום עברי ומשפט הסבר');
