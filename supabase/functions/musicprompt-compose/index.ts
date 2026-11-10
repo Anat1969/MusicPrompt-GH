@@ -43,11 +43,10 @@ Do not invent facts. Output only the JSON.`;
 const SCHEMA_CLAUDE = { type: 'object', additionalProperties: false, required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'string' }, style: { type: 'string' }, lyrics: { type: 'string' }, title: { type: 'string' }, exclude: { type: 'string' }, note: { type: 'string' } } };
 const SCHEMA_GEMINI = { type: 'OBJECT', required: ['style', 'lyrics', 'title', 'exclude', 'note', 'styleHe'], properties: { styleHe: { type: 'STRING' }, style: { type: 'STRING' }, lyrics: { type: 'STRING' }, title: { type: 'STRING' }, exclude: { type: 'STRING' }, note: { type: 'STRING' } } };
 
-// שני המודלים הראשיים רצים במקביל, והראשון שעונה מנצח. נלמד מהיומן (10.11.2026): gemini-flash-latest עמוס,
-// ומחזיר 503 רק אחרי 15 עד 20 שניות, ורק אז התחיל המודל הקל. במקביל, התשובה מגיעה בזמן של המהיר מהשניים.
-// בלי thinkingConfig: המודל הקל דוחה אותו ב-400.
-const FAST = [Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-const BACKUP = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+// כל המודלים רצים במקביל מההתחלה, והראשון שעונה מנצח. נלמד מהיומן (10.11.2026): gemini-flash-latest נתקע 28 שניות,
+// המודל הקל מחזיר לפעמים 503 מיד, ו-gemini-2.5-flash עונה תוך 9 עד 11 שניות. בטור, הכישלונות הצטברו ליותר מחצי דקה.
+// בלי thinkingConfig: המודל הקל דוחה אותו ב-400. gemini-2.5-flash-lite הוסר: מחזיר 404.
+const MODELS = [...new Set([Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash'])];
 
 async function askGemini(key: string, model: string, user: string, ms: number) {
   const started = Date.now();
@@ -75,10 +74,7 @@ async function askGemini(key: string, model: string, user: string, ms: number) {
   }
 }
 
-async function viaGemini(key: string, user: string) {
-  try { return await Promise.any([...new Set(FAST)].map((m) => askGemini(key, m, user, 28000))); } catch { /* שניהם נכשלו: גיבוי */ }
-  return await Promise.any(BACKUP.map((m) => askGemini(key, m, user, 15000)));
-}
+const viaGemini = (key: string, user: string) => Promise.any(MODELS.map((m) => askGemini(key, m, user, 22000)));
 
 async function viaClaude(key: string, user: string) {
   const client = new Anthropic({ apiKey: key });
