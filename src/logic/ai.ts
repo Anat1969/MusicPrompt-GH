@@ -4,7 +4,7 @@ import type { Prompt } from './compose';
 
 const URL = 'https://ktqmwpbzcnzkhjskqisy.supabase.co/functions/v1/musicprompt-compose';
 
-export type Polished = Prompt & { note: string; engine: 'gemini' | 'claude' };
+export type Polished = Prompt & { note: string; styleHe: string; engine: 'gemini' | 'claude' };
 
 export async function polish(input: { desc: string; words: string; base: Prompt; sel: Selection; instrumental: boolean; lang: string; taste: string }): Promise<Polished> {
   let r: Response;

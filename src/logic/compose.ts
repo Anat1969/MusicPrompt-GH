@@ -6,28 +6,37 @@ export const STYLE_LIMIT = 1000; // לפי מדריכים חיצוניים לג�
 export type Prompt = { title: string; style: string; lyrics: string; exclude: string };
 
 const picks = (sel: Selection, id: GroupId) =>
-  (sel[id] ?? []).map((oid) => group(id).options.find((o) => o.id === oid)).filter(Boolean) as { id: string; he: string; en: string; bpm?: number; minor?: boolean }[];
+  (sel[id] ?? []).map((oid) => group(id).options.find((o) => o.id === oid)).filter(Boolean) as { id: string; he: string; en: string; bpm?: number; minor?: boolean; gloss?: string }[];
 
 export const isInstrumental = (sel: Selection) => (sel.voice ?? [])[0] === 'instrumental';
 export const hasVoice = (sel: Selection) => !!(sel.voice ?? [])[0] && !isInstrumental(sel);
 export const countPicks = (sel: Selection) => GROUPS.reduce((n, g) => n + (sel[g.id]?.length ?? 0), 0);
 
-export function composeStyle(sel: Selection): string {
-  const parts: string[] = [];
-  const genres = picks(sel, 'genre').map((o) => o.en);
-  if (genres.length === 2) parts.push(`${genres[0]} fused with ${genres[1]}`); else parts.push(...genres);
-  parts.push(...picks(sel, 'mood').map((o) => o.en));
-  parts.push(...picks(sel, 'tempo').map((o) => o.en));
+// חלקי הפרומפט: כל שלב תורם חלק אחד, באנגלית (מה ש-Suno מקבל) ובעברית (מה שזה אומר). זה הבסיס לטבלה במסך היצירה.
+export type Part = { group: GroupId; en: string; he: string };
+export function composeParts(sel: Selection): Part[] {
+  const parts: Part[] = [];
+  const genres = picks(sel, 'genre');
+  if (genres.length === 2) parts.push({ group: 'genre', en: `${genres[0].en} fused with ${genres[1].en}`, he: `${genres[0].he} בשילוב ${genres[1].he}` });
+  else if (genres.length) parts.push({ group: 'genre', en: genres[0].en, he: genres[0].he });
+  const mood = picks(sel, 'mood');
+  if (mood.length) parts.push({ group: 'mood', en: mood.map((o) => o.en).join(', '), he: mood.map((o) => o.he).join(', ') });
+  const tempo = picks(sel, 'tempo')[0];
+  if (tempo) parts.push({ group: 'tempo', en: tempo.en, he: `${tempo.he}, ${tempo.bpm} פעימות בדקה` });
   const voice = picks(sel, 'voice')[0];
   if (voice) {
     const lang = picks(sel, 'lang')[0];
-    parts.push(voice.id !== 'instrumental' && lang ? `${voice.en} singing in ${lang.en}` : voice.en);
+    if (voice.id === 'instrumental') parts.push({ group: 'voice', en: voice.en, he: 'כלים בלבד, בלי שירה' });
+    else parts.push({ group: 'voice', en: lang ? `${voice.en} singing in ${lang.en}` : voice.en, he: lang ? `${voice.he}, שירה ב${lang.he}` : voice.he });
   }
-  const inst = picks(sel, 'inst').map((o) => o.en);
-  if (inst.length) parts.push(`featuring ${inst.join(', ')}`);
-  parts.push(...picks(sel, 'use').map((o) => o.en));
-  return parts.join(', ');
+  const inst = picks(sel, 'inst');
+  if (inst.length) parts.push({ group: 'inst', en: `featuring ${inst.map((o) => o.en).join(', ')}`, he: `עם ${inst.map((o) => o.he).join(', ')}` });
+  const use = picks(sel, 'use')[0];
+  if (use) parts.push({ group: 'use', en: use.en, he: use.gloss ?? use.he });
+  return parts;
 }
+export const composeStyle = (sel: Selection) => composeParts(sel).map((p) => p.en).join(', ');
+export const composeStyleHe = (sel: Selection) => composeParts(sel).map((p) => p.he).join(', ');
 
 export function composeExclude(sel: Selection): string {
   const out: string[] = [];

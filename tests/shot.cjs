@@ -21,8 +21,8 @@ const SEED = [
       await p.route('**/appofapp-gh.vercel.app/**', (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body: MENU }));
       const shot = async (name) => p.screenshot({ path: `${__dirname}/shots/${name}-${vp.width}.png`, fullPage: vp.width < 500 });
       await p.goto(BASE, { waitUntil: 'networkidle' }); await shot('home-empty');
-      await p.goto(BASE + '#/create?preset=p-walk', { waitUntil: 'networkidle' });
-      await p.locator('#desc').fill('הליכה בטיילת בשעת שקיעה, כמו שיר ים תיכוני ישן'); await p.waitForTimeout(300); await shot('create');
+      await p.goto(BASE + '#/create?preset=p-walk', { waitUntil: 'networkidle' }); await p.goto(BASE + '#/create?s=0', { waitUntil: 'networkidle' });
+      await p.waitForTimeout(300); await shot('create-desc'); await p.goto(BASE + '#/create?s=2', { waitUntil: 'networkidle' }); await shot('create'); await p.goto(BASE + '#/create?s=4', { waitUntil: 'networkidle' }); await shot('create-voice'); await p.goto(BASE + '#/create?v=all', { waitUntil: 'networkidle' }); await shot('create-all');
       await p.evaluate((s) => localStorage.setItem('musicprompt.library.v1', JSON.stringify(s)), SEED);
       await p.goto(BASE + '#/library', { waitUntil: 'networkidle' }); await p.reload({ waitUntil: 'networkidle' }); await shot('library');
       await p.goto(BASE, { waitUntil: 'networkidle' }); await p.locator('.h-legend .lg').first().hover().catch(() => {}); await shot('home');

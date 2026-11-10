@@ -6,7 +6,7 @@ const BASE = 'http://localhost:4199/';
 const MENU = fs.readFileSync(__dirname + '/ai-menu.js', 'utf8');
 const fails = [];
 const ok = (cond, msg) => { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!cond) fails.push(msg); };
-const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in Hebrew, oud', lyrics: '[Verse 1]\nשורה ראשונה\n\n[Chorus]\nפזמון', title: 'שקיעה בטיילת', exclude: 'heavy metal', note: 'תרגמתי את השם לתכונות מוזיקליות.', engine: 'gemini' };
+const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in Hebrew, oud', lyrics: '[Verse 1]\nשורה ראשונה\n\n[Chorus]\nפזמון', title: 'שקיעה בטיילת', exclude: 'heavy metal', note: 'תרגמתי את השם לתכונות מוזיקליות.', styleHe: 'פופ פולק ישראלי, חם, 110 פעימות בדקה, זמרת בעברית, עוד', engine: 'gemini' };
 
 (async () => {
   const srv = spawn('npx', ['vite', 'preview', '--port', '4199', '--strictPort'], { stdio: 'ignore' });
@@ -32,29 +32,67 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     ok((await p.locator('.h-now strong').innerText()) === 'הליכה על הטיילת', 'בית: ריחוף על המקרא מדגיש את הקו ומציג את שמו');
     ok(await p.locator('.staff-line.is-on').count() === 1, 'בית: קו אחד מודגש');
     await p.locator('.h-legend .lg').nth(2).click();
-    await p.waitForFunction(() => location.hash === '#/create');
+    await p.waitForFunction(() => location.hash === '#/create?s=1');
 
-    // יצירה מדוגמה
-    ok((await p.locator('[data-testid=style] textarea').inputValue()).includes('110 BPM'), 'יצירה: הדוגמה מילאה את הבחירות והסגנון נכתב');
-    ok((await p.locator('[data-testid=style] textarea').inputValue()).includes('singing in Hebrew'), 'יצירה: שפת המילים נכנסת לסגנון');
+    // יצירה מדוגמה: שלב אחד מבודד, עם הסבר והצעות
+    const tick = () => p.waitForTimeout(150);   // מעבר שלב עובר דרך הכתובת
+    const step = (name) => ({ click: async () => { await p.locator('.steps-list').getByRole('button', { name }).click(); await tick(); } });
+    const opt = (name) => p.locator('.opts').getByRole('button', { name });
+    ok((await p.locator('.q h1').innerText()) === 'מאיזה עולם המוזיקה?', 'יצירה: שאלה אחת מבודדת בכל שלב');
+    ok((await p.locator('.q-how').innerText()).includes('מה זה משנה בפרומפט'), 'יצירה: כל שלב מסביר מה הוא משנה בפרומפט');
+    ok(await p.locator('.step[aria-current=step] .step-t').innerText() === 'סגנון', 'יצירה: המחוון מראה באיזה שלב אני');
+    ok(await p.locator('.opts .opt span').first().innerText() === 'classical orchestral', 'יצירה: כל אפשרות מציגה גם את המונח באנגלית');
+    ok((await p.locator('[data-testid=style] textarea').inputValue()).includes('110 BPM'), 'יצירה: הדוגמה מילאה את הבחירות והפרומפט נכתב');
+    ok((await p.locator('[data-testid=style-he]').innerText()).includes('110 פעימות בדקה'), 'יצירה: הפרומפט מוצג גם בעברית');
+    const row = p.locator('.build tbody tr').nth(2);
+    ok((await row.locator('td').nth(0).innerText()).includes('קצב הליכה') && (await row.locator('td').nth(1).innerText()).includes('110 BPM'), 'טבלת הבנייה: עברית מול אנגלית לכל שלב');
+    await p.getByRole('button', { name: 'הבא', exact: true }).click(); await tick();
+    ok((await p.locator('.q h1').innerText()) === 'מה מרגישים?' && p.url().endsWith('s=2'), 'יצירה: "הבא" מתקדם, והשלב בכתובת');
+    ok(await p.locator('.opt.is-sug').count() > 0 && (await p.locator('.q-sug').innerText()).includes('מוצע'), 'יצירה: הצעות לפי הסגנון שנבחר, מסומנות');
+    ok(await p.locator('.build tr.is-now th').innerText() === 'אווירה', 'טבלת הבנייה: השורה של השלב הנוכחי מודגשת');
+    // החמשה כבחירה: לחיצה על נקודה בקו הקצב
+    const box = await p.locator('svg.staff.is-live').boundingBox();
+    const before = await p.locator('[data-testid=style] textarea').inputValue();
+    const vb = { w: 640, h: 270 }, sc = Math.min(box.width / vb.w, box.height / vb.h), ox = box.x + (box.width - vb.w * sc) / 2, oy = box.y + (box.height - vb.h * sc) / 2;
+    const at = (line, frac) => ({ x: ox + (555 - frac * 530) * sc, y: oy + (34 + line * 50.5) * sc });
+    const a = at(2, 0), z = at(2, 1);
+    await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move((a.x + z.x) / 2, a.y, { steps: 6 }); await p.mouse.move(z.x, z.y, { steps: 6 }); await p.mouse.up(); await tick();
+    const after = await p.locator('[data-testid=style] textarea').inputValue();
+    ok(before.includes('110 BPM') && after.includes('150 BPM'), 'החמשה: גרירת העיגול לאורך קו הקצב משנה את הפרומפט');
+    ok((await p.locator('.q h1').innerText()) === 'כמה מהר?', 'החמשה: גרירה על קו עוברת לשלב שלו');
+    ok(await opt('מהיר מאוד').getAttribute('aria-pressed') === 'true', 'החמשה: הבחירה מסומנת גם בשלב');
+    ok((await p.locator('.staff-how').innerText()).includes('איך הדיאגרמה עובדת'), 'החמשה: הסבר איך היא עובדת');
+    await p.locator('.build tbody tr').nth(3).click(); await tick();
+    ok((await p.locator('.q h1').innerText()) === 'מי שר, אם בכלל?', 'טבלת הבנייה: לחיצה על שורה עוברת לשלב');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'מילים' }).click();
     ok(await p.locator('[data-testid=lyrics]').isVisible(), 'יצירה: יש שדה מילים כשנבחר קול');
-    ok(await p.locator('textarea.field:not(.cb-text)').count() === await p.locator('.voice-btn').count() && await p.locator('.voice-btn').count() === 2, 'ליד כל שדה כתיבה חופשי יש כפתור הקלטה');
-    await p.getByRole('group', { name: 'קול' }).getByRole('button', { name: 'בלי מילים' }).click();
+    ok(await p.locator('textarea.field:not(.cb-text)').count() === await p.locator('.voice-btn').count() && await p.locator('.voice-btn').count() >= 1, 'ליד כל שדה כתיבה חופשי יש כפתור הקלטה');
+    await opt('בלי מילים').click();
     ok(!(await p.locator('[data-testid=lyrics]').isVisible().catch(() => false)) && (await p.locator('.o-note').innerText()).includes('Instrumental'), 'יצירה: בלי מילים מסתיר את שדה המילים ומסביר');
-    ok((await p.locator('[data-testid=style] textarea').inputValue()).includes('instrumental, no vocals'), 'יצירה: הסגנון התעדכן לאינסטרומנטלי');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'הפרומפט המלא' }).click();
+    ok((await p.locator('[data-testid=style] textarea').inputValue()).includes('instrumental, no vocals'), 'יצירה: הפרומפט התעדכן לאינסטרומנטלי');
+    ok((await p.locator('[data-testid=style-he]').innerText()).includes('בלי שירה'), 'יצירה: גם העברית התעדכנה');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'כותרת ובלי' }).click();
     ok((await p.locator('[data-testid=exclude] textarea').inputValue()).includes('vocals'), 'יצירה: שדה "בלי" מתמלא');
     ok(!(await p.getByRole('group', { name: 'שפת המילים' }).isVisible().catch(() => false)), 'יצירה: שורת השפה נעלמת בלי קול');
-    await p.getByRole('group', { name: 'קול' }).getByRole('button', { name: 'זמרת' }).click();
+    await opt('זמרת').click();
+    ok(await p.getByRole('group', { name: 'שפת המילים' }).isVisible(), 'יצירה: שורת השפה חוזרת עם קול');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'הפרומפט המלא' }).click();
     // מגבלת בחירות: סגנון עד 2
-    const genre = p.getByRole('group', { name: 'סגנון' });
-    await genre.getByRole('button', { name: "ג'אז" }).click();
-    ok(await genre.locator('[aria-pressed=true]').count() === 2, 'יצירה: בסגנון נשארות שתי בחירות לכל היותר');
+    await step('סגנון').click();
+    await opt("ג'אז").click();
+    ok(await p.locator('.opts [aria-pressed=true]').count() === 2, 'יצירה: בסגנון נשארות שתי בחירות לכל היותר');
+    // תצוגת "הכול"
+    await p.getByRole('button', { name: 'הכול', exact: true }).click(); await tick();
+    ok(await p.locator('.rows .row').count() >= 6 && p.url().includes('v=all'), 'יצירה: "הכול" מציג את כל השאלות יחד, והמצב בכתובת');
+    await p.getByRole('button', { name: 'שלב אחד' }).click(); await tick();
+    await step('תיאור').click();
 
     // העתקה
     await p.locator('[data-testid=style] .cb-copy').click();
     ok(await p.evaluate(() => navigator.clipboard.readText()) === await p.locator('[data-testid=style] textarea').inputValue(), 'העתקה: הסגנון בלוח');
     ok((await p.locator('[data-testid=style] .cb-copy').innerText()) === 'הועתק', 'העתקה: הכפתור מאשר');
-    const [popup] = await Promise.all([ctx.waitForEvent('page'), p.getByRole('button', { name: 'העתקת הסגנון ופתיחת Suno' }).click()]);
+    const [popup] = await Promise.all([ctx.waitForEvent('page'), p.getByRole('button', { name: 'העתקה ופתיחת Suno' }).click()]);
     await popup.waitForURL(/suno\.com/).catch(() => {});
     ok(popup.url().startsWith('https://suno.com/create'), 'פתיחת Suno בלשונית חדשה');
     await popup.close();
@@ -64,11 +102,17 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     await p.getByRole('button', { name: 'ליטוש חכם' }).click();
     await p.locator('.tag.e-gemini').waitFor();
     ok(aiCalls === 1 && (await p.locator('[data-testid=style] textarea').inputValue()) === AI.style, 'ליטוש חכם: הסגנון הוחלף בתוצאה');
-    ok((await p.locator('[data-testid=lyrics] textarea').inputValue()).includes('[Chorus]') && (await p.locator('.msg-solution').innerText()).includes('תרגמתי'), 'ליטוש חכם: מילים ומשפט הסבר');
-    await genre.getByRole('button', { name: 'פופ' }).click();
+    ok((await p.locator('[data-testid=style-he]').innerText()).includes('פופ פולק ישראלי') && (await p.locator('.msg-solution').innerText()).includes('תרגמתי'), 'ליטוש חכם: תרגום עברי ומשפט הסבר');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'מילים' }).click();
+    ok((await p.locator('[data-testid=lyrics] textarea').inputValue()).includes('[Chorus]'), 'ליטוש חכם: מילים מלאות');
+    await p.locator('.o-tabs').getByRole('tab', { name: 'הפרומפט המלא' }).click();
+    await step('סגנון').click();
+    await opt('פופ').click();
     ok(await p.getByText('הבחירות השתנו מאז הליטוש').isVisible(), 'ליטוש חכם: שינוי בחירה מסומן, והתוצאה לא נמחקת');
     await p.reload({ waitUntil: 'networkidle' });
-    ok((await p.locator('#desc').inputValue()) === 'כמו שיר ישן של זמר אהוב' && (await p.locator('[data-testid=title] textarea').inputValue()) === AI.title, 'שמירה אוטומטית: הטיוטה חוזרת אחרי רענון');
+    ok((await p.locator('[data-testid=style] textarea').inputValue()) === AI.style, 'שמירה אוטומטית: הפרומפט חוזר אחרי רענון');
+    await step('תיאור').click();
+    ok((await p.locator('#desc').inputValue()) === 'כמו שיר ישן של זמר אהוב', 'שמירה אוטומטית: התיאור חוזר אחרי רענון');
     aiFail = true;
     await p.getByRole('button', { name: 'ליטוש חכם' }).click();
     await p.locator('.msg-problem').waitFor({ timeout: 4000 }).catch(() => {});
@@ -99,9 +143,9 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
 
     // הטעם שלי
     await p.locator('.tabs').getByRole('button', { name: 'יצירה' }).click();
-    await p.getByRole('button', { name: 'ניקוי' }).click();
-    await p.getByRole('button', { name: 'הטעם שלי' }).click();
-    ok(await p.getByRole('group', { name: 'קצב' }).locator('[aria-pressed=true]').count() === 1, 'הטעם שלי: ממלא בחירות מהשירים האהובים');
+    await p.getByRole('button', { name: 'ניקוי' }).click(); await tick();
+    await p.getByRole('button', { name: 'הטעם שלי' }).click(); await tick();
+    ok(!(await p.locator('.build tbody tr').nth(0).getAttribute('class')).includes('is-off'), 'הטעם שלי: ממלא בחירות מהשירים האהובים');
     await p.locator('.brand').click();
     await p.waitForFunction(() => location.hash === '');
     ok(await p.locator('.staff-line.k-taste').count() === 1, 'בית: קו הטעם שלי מופיע על החמשה');
@@ -109,7 +153,8 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     // גרסה חדשה ומחיקה
     await p.locator('.tabs').getByRole('button', { name: 'ספרייה' }).click();
     await p.getByRole('button', { name: 'גרסה חדשה מזה' }).click();
-    await p.waitForFunction(() => location.hash === '#/create');
+    await p.waitForFunction(() => location.hash === '#/create?s=1');
+    await step('תיאור').click();
     ok((await p.locator('#desc').inputValue()) === 'כמו שיר ישן של זמר אהוב', 'גרסה חדשה: הבחירות והתיאור נטענו ליצירה');
     await p.locator('.tabs').getByRole('button', { name: 'ספרייה' }).click();
     await p.getByRole('button', { name: 'מחיקה', exact: true }).click();
@@ -138,8 +183,11 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
         ok(!r.x, `${vp.width}px ${h || 'בית'}: בלי גלילה אופקית`);
         if (vp.width > 900) ok(!r.y, `${vp.width}×${vp.height} ${h || 'בית'}: הדף בגודל המסך, בלי גלילת דף`);
         if (vp.width > 900 && h.startsWith('#/create')) {
-          const inner = await m.evaluate(() => { const el = document.querySelector('.c-in'); return el.scrollHeight - el.clientHeight; });
-          ok(inner <= 1, `${vp.width}×${vp.height} יצירה: כל הבוררים נראים בלי גלילה בתוך המסגרת (${inner})`);
+          for (const st of [1, 2, 4, 5]) {
+            await m.goto(BASE + '#/create?s=' + st, { waitUntil: 'networkidle' });
+            const inner = await m.evaluate(() => Math.max(...['.q', '.o-blocks'].map((q) => { const el = document.querySelector(q); return el ? el.scrollHeight - el.clientHeight : 0; })));
+            ok(inner <= 1, `${vp.width}×${vp.height} יצירה, שלב ${st}: השאלה והפרומפט נראים בלי גלילה בתוך מסגרת (${inner})`);
+          }
         }
       }
       await m.close();
