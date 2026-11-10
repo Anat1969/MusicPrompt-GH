@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { group } from '../data/options';
 import { staffPoints, summary, labelsOf } from '../logic/compose';
 import { STAFF } from '../data/options';
-import { getAudio, putAudio, delAudio, removeSong, updateSong, useLibrary, type Song } from '../logic/store';
+import { loadAudio, saveAudio, dropAudio, removeSong, updateSong, useLibrary, type Song } from '../logic/store';
+import { useCloud } from '../logic/cloud';
 import { go, type Route } from '../logic/route';
 import Staff from '../components/Staff';
 import { CopyBlock } from '../components/ui';
@@ -34,13 +35,13 @@ function Player({ song }: { song: Song }) {
   useEffect(() => {
     let u = '', live = true;
     setUrl(''); setErr('');
-    if (song.audioName) getAudio(song.id).then((b) => { if (live && b) { u = URL.createObjectURL(b); setUrl(u); } else if (live) setErr('הקובץ לא נמצא במכשיר הזה. אפשר להעלות אותו שוב.'); }).catch(() => live && setErr('לא הצלחתי לקרוא את הקובץ.'));
+    if (song.audioName) loadAudio(song.id).then((b) => { if (live && b) { u = URL.createObjectURL(b); setUrl(u); } else if (live) setErr('הקובץ לא נמצא במכשיר הזה ולא בענן. אפשר להעלות אותו שוב.'); }).catch(() => live && setErr('לא הצלחתי לקרוא את הקובץ.'));
     return () => { live = false; if (u) URL.revokeObjectURL(u); };
   }, [song.id, song.audioName]);
   const upload = async (f?: File) => {
     if (!f) return;
     if (!f.type.startsWith('audio/') && !f.type.startsWith('video/')) { setErr('זה לא קובץ שמע. ב-Suno בוחרים Download ואז MP3 Audio.'); return; }
-    try { await putAudio(song.id, f); updateSong(song.id, { audioName: f.name }); } catch { setErr('אין מקום לשמור את הקובץ בדפדפן. אפשר לשמור במקומו את הקישור ל-Suno.'); }
+    try { await saveAudio(song.id, f); } catch { setErr('אין מקום לשמור את הקובץ בדפדפן. אפשר לשמור במקומו את הקישור ל-Suno.'); }
   };
   return (
     <div className="player">
@@ -48,7 +49,7 @@ function Player({ song }: { song: Song }) {
         <span className="cb-he">השיר עצמו</span>
         <span className="cb-hint-in">{song.audioName ? song.audioName : 'מורידים מ-Suno כקובץ שמע, ומעלים לכאן'}</span>
         <button type="button" className="press chip" onClick={() => input.current?.click()}>{song.audioName ? 'החלפת קובץ' : 'העלאת קובץ שמע'}</button>
-        {song.audioName && <button type="button" className="press chip" onClick={async () => { await delAudio(song.id).catch(() => {}); updateSong(song.id, { audioName: '' }); }}>הסרה</button>}
+        {song.audioName && <button type="button" className="press chip" onClick={() => void dropAudio(song.id)}>הסרה</button>}
         <input ref={input} type="file" accept="audio/*,video/mp4" hidden onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ''; }} />
       </div>
       {url && <audio controls src={url} className="audio" />}
@@ -62,8 +63,9 @@ function Player({ song }: { song: Song }) {
   );
 }
 
-export default function Library({ route, onSaved }: { route: Route; onSaved: (m: string) => void }) {
+export default function Library({ route, onSaved, onLogin }: { route: Route; onSaved: (m: string) => void; onLogin: () => void }) {
   const lib = useLibrary();
+  const cloud = useCloud();
   const [sort, setSort] = useState<Sort>('date');
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
@@ -102,6 +104,9 @@ export default function Library({ route, onSaved }: { route: Route; onSaved: (m:
           <p>כאן נשמר כל פרומפט שעבד, יחד עם השיר ש-Suno יצר ממנו.</p>
           <p><strong>שלושה צעדים:</strong> יוצרים פרומפט, מעתיקים ל-Suno, ושומרים כאן.</p>
           <button type="button" className="press btn go" onClick={() => go('create')}>יצירת פרומפט ראשון</button>
+          {cloud.uid
+            ? <p className="src">{cloud.status === 'syncing' ? 'מסנכרן עם הענן' : 'מחוברת לענן, ואין בו עדיין שירים.'} <span dir="ltr">{cloud.email}</span></p>
+            : <p className="src">יש כבר ספרייה במכשיר אחר? <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
         </div>
       </main>
     );
@@ -116,6 +121,9 @@ export default function Library({ route, onSaved }: { route: Route; onSaved: (m:
           <div className="row-chips" role="group" aria-label="סידור">{SORTS.map((s) => <button key={s.id} type="button" className="press chip" aria-pressed={sort === s.id} onClick={() => setSort(s.id)}>{s.he}</button>)}</div>
           <div className="row-chips" role="group" aria-label="סינון">{FILTERS.map((f) => <button key={f.id} type="button" className={`press chip${f.id === 'all' ? ' is-all' : ''}`} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.he}</button>)}</div>
           <p className="l-by">מסודר: {SORTS.find((s) => s.id === sort)!.by}.</p>
+          {cloud.uid
+            ? <p className={`l-cloud${cloud.status === 'error' ? ' is-err' : ''}`}>{cloud.status === 'syncing' ? 'מסנכרן עם הענן' : cloud.status === 'error' ? cloud.error : 'שמור בענן, וזמין בכל מכשיר.'} <span className="src" dir="ltr">{cloud.email}</span></p>
+            : <p className="l-cloud is-local">הספרייה שמורה רק במכשיר הזה. <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
         </header>
         <div className="l-items scroll-in">
           {!shown.list.length && <p className="empty">לא נמצא שיר שמתאים. אפשר לנקות את החיפוש או לבחור "הכול".</p>}
