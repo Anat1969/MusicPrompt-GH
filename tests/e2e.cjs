@@ -24,7 +24,14 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
 
     // דף הבית
     await p.goto(BASE, { waitUntil: 'networkidle' });
-    ok((await p.locator('h1').innerText()).includes('טעם אישי הופך לפס קול'), 'בית: שורת התובנה');
+    ok((await p.locator('h1').innerText()).includes('המילים חסרות'), 'בית: הפתיח פותח בכאב');
+    ok((await p.locator('.h-fix').innerText()).includes('מתרגמת טעם לפס קול') && await p.locator('.h-fixes li').count() === 3, 'בית: הפתרון בשלושה צעדים');
+    const vid = await p.evaluate(async () => { const v = document.querySelector('.h-film video'); const r = await fetch(v.getAttribute('src'), { method: 'HEAD' }); const pr = await fetch(v.getAttribute('poster'), { method: 'HEAD' }); return { ok: r.ok && pr.ok, type: r.headers.get('content-type') }; });
+    ok(vid.ok && /video/.test(vid.type || ''), 'בית: סרטון השיווק נמצא בפתיח');
+    ok(await p.locator('.h-dot').count() === 3 && (await p.locator('.h-dot[aria-current=true]').innerText()).includes('פתיח'), 'בית: מחוון של שלושה מסכים');
+    await p.locator('.h-dot').nth(1).click(); await p.waitForTimeout(700);
+    ok((await p.locator('.h-title').innerText()).includes('טעם אישי הופך לפס קול') && (await p.locator('.h-dot[aria-current=true]').innerText()).includes('החמשה'), 'בית: המסך השני הוא החמשה, והתוכן הקודם נשמר');
+    ok(await p.locator('.h-cards .h-card').count() === 3 && await p.locator('.h-museum .h-quote').count() === 1, 'בית: מפת התוכן ושכבת הידע נשמרו במסך השלישי');
     ok(await p.locator('svg.staff .staff-line').count() === 6, 'בית: שש דוגמאות על החמשה כשהספרייה ריקה');
     ok(await p.locator('ai-menu .logo').isVisible(), 'כפתור הלוגו A&I בסרגל');
     ok(!(await p.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), 'אין כפתורי פיתוח חופשיים בסרגל');
@@ -126,6 +133,38 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     await p.getByRole('button', { name: 'מעבר לספרייה' }).click();
     await p.waitForFunction(() => location.hash.startsWith('#/library'));
     ok((await p.locator('.d-title').inputValue()) === AI.title, 'ספרייה: השיר שנשמר פתוח');
+    ok((await p.locator('[data-testid=d-he]').innerText()).includes('פופ פולק ישראלי'), 'ספרייה: הניסוח בעברית נשמר עם השיר');
+    ok((await p.locator('.d-tab .msg-solution').innerText()).includes('תרגמתי'), 'ספרייה: נשמר גם מה שהליטוש עשה');
+    // השראה חזותית: שלוש מסגרות ופרומפט לתמונה
+    ok(await p.locator('.d-strip .frame').count() === 3, 'ספרייה: שלוש מסגרות, מבנה, מרחב מחיה ובגד');
+    await p.locator('.frame[data-kind=garment] figcaption .chip').first().click();
+    const vp = await p.evaluate(() => navigator.clipboard.readText());
+    ok(vp.includes('בגד אופנתי') && vp.endsWith('--ar 1:1 --no text, words, writing, frame divisions') && vp.includes('Documentary realism'), 'ספרייה: העתקת פרומפט לתמונה, בעברית ועם הפרמטרים הקבועים');
+    ok((await p.locator('[data-testid=d-visual] textarea').inputValue()) === vp && (await p.locator('[data-testid=d-distill]').innerText()).includes('האווירה'), 'ספרייה: הפרומפט לתמונה מוצג ונערך בלשונית שלו');
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    await p.locator('.frame[data-kind=building] input[type=file]').setInputFiles({ name: 'b.png', mimeType: 'image/png', buffer: png });
+    await p.locator('.frame[data-kind=building] img').waitFor();
+    ok(true, 'מסגרת: העלאה בלחיצה');
+    const dropOrPaste = (kind, type) => p.evaluate(async ([kind, type, b64]) => {
+      const bin = atob(b64), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      const dt = new DataTransfer(); dt.items.add(new File([arr], 'x.png', { type: 'image/png' }));
+      const box = document.querySelector(`.frame[data-kind=${kind}] .frame-box`);
+      if (type === 'drop') box.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      else { box.focus(); window.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt })); }
+    }, [kind, type, png.toString('base64')]);
+    await dropOrPaste('space', 'drop');
+    await p.locator('.frame[data-kind=space] img').waitFor({ timeout: 4000 }).catch(() => {});
+    ok(await p.locator('.frame[data-kind=space] img').count() === 1, 'מסגרת: גרירה של תמונה');
+    await p.locator('.frame[data-kind=garment] .frame-box').focus(); await p.waitForTimeout(200);   // המסגרת שנבחרה היא היעד של ההדבקה
+    await dropOrPaste('garment', 'paste');
+    await p.locator('.frame[data-kind=garment] img').waitFor({ timeout: 4000 }).catch(() => {});
+    ok(await p.locator('.frame[data-kind=garment] img').count() === 1, 'מסגרת: הדבקה של תמונה');
+    await p.reload({ waitUntil: 'networkidle' });
+    await p.locator('.frame img').first().waitFor({ timeout: 4000 }).catch(() => {});
+    ok(await p.locator('.frame img').count() === 3, 'מסגרות: שלוש התמונות נשמרות אחרי רענון');
+    await p.locator('.frame[data-kind=space] figcaption .chip').last().click();
+    await p.waitForTimeout(300);
+    ok(await p.locator('.frame img').count() === 2, 'מסגרת: הסרת תמונה');
     ok((await p.locator('.l-tools h1').innerText()).startsWith('1'), 'ספרייה: מונה');
     await p.getByRole('button', { name: 'סימון כאהוב' }).click();
     ok(await p.locator('.l-item .t-loved').count() === 1, 'ספרייה: אהבתי מסומן ברשימה');

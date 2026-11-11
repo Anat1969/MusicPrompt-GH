@@ -100,7 +100,7 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
     window.open(SUNO, '_blank', 'noopener');
     setTimeout(() => setCopied(false), 4000);
   };
-  const save = () => { const s = addSong({ ...out, desc, sel, engine: draft.engine, styleHe }); setSaved(s.id); onSaved('נשמר בספרייה'); };
+  const save = () => { const s = addSong({ ...out, desc, sel, engine: draft.engine, styleHe, note: polished ? draft.note : '' }); setSaved(s.id); onSaved('נשמר בספרייה'); };
   const pulse = () => { if (!bpm) return; setPlaying(true); setTimeout(() => setPlaying(false), playPulse(bpm, isMinor(sel)) || 0); };
   const clear = () => { setDraft(EMPTY_DRAFT); setPolishedSig(''); setError(''); setSaved(''); goStep(0); };
 
