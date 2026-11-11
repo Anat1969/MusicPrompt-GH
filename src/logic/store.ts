@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Selection } from '../data/options';
 import type { Prompt } from './compose';
+import type { Kind, Visual } from './visual';
 import { audioDownload, audioRemove, audioUpload, audioUploadNow, cloudState, initCloud, remoteDelete, remoteList, remoteUpsert, remoteUpsertNow } from './cloud';
 
 export type Song = Prompt & {
@@ -15,6 +16,9 @@ export type Song = Prompt & {
   audioName: string;     // ריק: אין קובץ שמע
   engine: 'local' | 'gemini' | 'claude';
   styleHe?: string;      // הסגנון בעברית, לקריאה
+  note?: string;         // מה הליטוש החכם עשה
+  visual?: Visual;       // שלושת הפרומפטים לתמונה, אם נערכו או לוטשו
+  imgs?: Partial<Record<Kind, string>>;   // שמות קובצי התמונה בשלוש המסגרות
   updatedAt?: number;    // לסנכרון: הגרסה החדשה מנצחת
   synced?: boolean;      // כבר קיים בענן. שיר כזה שנעלם מהענן נמחק במכשיר אחר
 };
@@ -73,6 +77,7 @@ export const updateSong = (id: string, patch: Partial<Song>) => { saveLib(lib.ma
 export async function removeSong(id: string) {
   window.clearTimeout(timers.get(id));
   await delAudio(id).catch(() => {});
+  for (const k of IMG_KINDS) { await delAudio(imgKey(id, k)).catch(() => {}); void audioRemove(imgKey(id, k)); }
   saveLib(lib.filter((s) => s.id !== id));
   void remoteDelete(id);
 }
@@ -108,6 +113,24 @@ export async function loadAudio(id: string): Promise<Blob | null> {
   return remote;
 }
 
+// תמונות ההשראה: שלוש מסגרות לכל שיר. נשמרות כמו השמע, במכשיר ואחרי כניסה גם בענן, תחת מפתח משלהן.
+const IMG_KINDS: Kind[] = ['building', 'space', 'garment'];
+const imgKey = (id: string, kind: Kind) => `${id}__${kind}`;
+export async function saveImage(id: string, kind: Kind, file: Blob, name: string) {
+  await putAudio(imgKey(id, kind), file);
+  const s = lib.find((x) => x.id === id);
+  updateSong(id, { imgs: { ...(s?.imgs ?? {}), [kind]: name || 'image' } });
+  void audioUpload(imgKey(id, kind), file);
+}
+export async function dropImage(id: string, kind: Kind) {
+  await delAudio(imgKey(id, kind)).catch(() => {});
+  const s = lib.find((x) => x.id === id);
+  const imgs = { ...(s?.imgs ?? {}) }; delete imgs[kind];
+  updateSong(id, { imgs });
+  void audioRemove(imgKey(id, kind));
+}
+export const loadImage = (id: string, kind: Kind) => loadAudio(imgKey(id, kind));
+
 // סנכרון מלא בכניסה: מאחדים את המכשיר ואת הענן. בכל שיר הגרסה החדשה מנצחת.
 async function syncAll() {
   const remote = new Map((await remoteList()).map((r) => [r.id, r.data as unknown as Song]));
@@ -116,7 +139,7 @@ async function syncAll() {
   for (const s of lib) {
     const r = remote.get(s.id);
     if (!r) {
-      if (s.synced) { await delAudio(s.id).catch(() => {}); continue; }   // נמחק במכשיר אחר
+      if (s.synced) { await delAudio(s.id).catch(() => {}); for (const k of IMG_KINDS) await delAudio(imgKey(s.id, k)).catch(() => {}); continue; }   // נמחק במכשיר אחר
       up.push(s); next.push({ ...s, synced: true });
     } else if ((s.updatedAt ?? s.createdAt) > (r.updatedAt ?? r.createdAt)) { up.push(s); next.push({ ...s, synced: true }); }
     else next.push({ ...r, synced: true });
@@ -126,12 +149,13 @@ async function syncAll() {
   for (const s of up) {
     await remoteUpsertNow(s.id, wire(s));
     if (s.audioName && !s.synced) { const f = await getAudio(s.id).catch(() => undefined); if (f) await audioUploadNow(s.id, f); }
+    if (!s.synced) for (const k of IMG_KINDS) if (s.imgs?.[k]) { const f = await getAudio(imgKey(s.id, k)).catch(() => undefined); if (f) await audioUploadNow(imgKey(s.id, k), f); }
   }
   saveLib(next.sort((a, b) => b.createdAt - a.createdAt));
 }
 // ביציאה: מה שכבר בענן יורד מהמכשיר, ומה שנוצר רק כאן נשאר
 function leave() {
-  for (const s of lib) if (s.synced) void delAudio(s.id).catch(() => {});
+  for (const s of lib) if (s.synced) { void delAudio(s.id).catch(() => {}); for (const k of IMG_KINDS) void delAudio(imgKey(s.id, k)).catch(() => {}); }
   saveLib(lib.filter((s) => !s.synced));
 }
 void initCloud({ onSignIn: syncAll, onSignOut: leave });
@@ -149,7 +173,7 @@ export async function importLibrary(file: File): Promise<number> {
   const data = JSON.parse(await file.text());
   const songs: Song[] = Array.isArray(data?.songs) ? data.songs : [];
   const known = new Set(lib.map((s) => s.id));
-  const fresh = songs.filter((s) => s && typeof s.id === 'string' && typeof s.style === 'string' && !known.has(s.id)).map((s) => ({ ...s, audioName: '', synced: false }));
+  const fresh = songs.filter((s) => s && typeof s.id === 'string' && typeof s.style === 'string' && !known.has(s.id)).map((s) => ({ ...s, audioName: '', imgs: {}, synced: false }));
   saveLib([...fresh, ...lib].sort((a, b) => b.createdAt - a.createdAt));
   fresh.forEach((s) => push(s.id));
   return fresh.length;
