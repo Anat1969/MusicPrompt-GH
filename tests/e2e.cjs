@@ -44,7 +44,8 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     // יצירה מדוגמה: שלב אחד מבודד, עם הסבר והצעות
     const tick = () => p.waitForTimeout(150);   // מעבר שלב עובר דרך הכתובת
     const step = (name) => ({ click: async () => { await p.locator('.steps-list').getByRole('button', { name }).click(); await tick(); } });
-    const opt = (name) => p.locator('.opts').getByRole('button', { name });
+    const opt = (name) => p.locator('.opts .opt').filter({ has: p.locator('strong', { hasText: new RegExp('^' + name + '$') }) });
+    const add = (name) => p.locator('.opts').getByRole('button', { name: `להוסיף את ${name} לבחירה` });
     ok((await p.locator('.q h1').innerText()) === 'מאיזה עולם המוזיקה?', 'יצירה: שאלה אחת מבודדת בכל שלב');
     ok((await p.locator('.q-how').innerText()).includes('מה זה משנה בפרומפט'), 'יצירה: כל שלב מסביר מה הוא משנה בפרומפט');
     ok(await p.locator('.step[aria-current=step] .step-t').innerText() === 'סגנון', 'יצירה: המחוון מראה באיזה שלב אני');
@@ -58,12 +59,13 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     ok(await p.locator('.opt.is-sug').count() > 0 && (await p.locator('.q-sug').innerText()).includes('מוצע'), 'יצירה: הצעות לפי הסגנון שנבחר, מסומנות');
     ok(await p.locator('.build tr.is-now th').innerText() === 'אווירה', 'טבלת הבנייה: השורה של השלב הנוכחי מודגשת');
     // החמשה כבחירה: לחיצה על נקודה בקו הקצב
-    const box = await p.locator('svg.staff.is-live').boundingBox();
     const before = await p.locator('[data-testid=style] textarea').inputValue();
-    const vb = { w: 640, h: 270 }, sc = Math.min(box.width / vb.w, box.height / vb.h), ox = box.x + (box.width - vb.w * sc) / 2, oy = box.y + (box.height - vb.h * sc) / 2;
-    const at = (line, frac) => ({ x: ox + (555 - frac * 530) * sc, y: oy + (34 + line * 50.5) * sc });
-    const a = at(2, 0), z = at(2, 1);
-    await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move((a.x + z.x) / 2, a.y, { steps: 6 }); await p.mouse.move(z.x, z.y, { steps: 6 }); await p.mouse.up(); await tick();
+    // הגרירה עוברת לשלב של הקו, והדיאגרמה משנה גודל. לכן המיקום מחושב מחדש אחרי תחילת הגרירה
+    const at = async (line, frac) => { const box = await p.locator('svg.staff.is-live').boundingBox(); const vb = { w: 640, h: 270 }, sc = Math.min(box.width / vb.w, box.height / vb.h), ox = box.x + (box.width - vb.w * sc) / 2, oy = box.y + (box.height - vb.h * sc) / 2; return { x: ox + (555 - frac * 530) * sc, y: oy + (34 + line * 50.5) * sc }; };
+    const a = await at(2, 0);
+    await p.mouse.move(a.x, a.y); await p.mouse.down(); await tick();
+    const mid = await at(2, 0.5); await p.mouse.move(mid.x, mid.y, { steps: 6 });
+    const z = await at(2, 1); await p.mouse.move(z.x, z.y, { steps: 6 }); await p.mouse.up(); await tick();
     const after = await p.locator('[data-testid=style] textarea').inputValue();
     ok(before.includes('110 BPM') && after.includes('150 BPM'), 'החמשה: גרירת העיגול לאורך קו הקצב משנה את הפרומפט');
     ok((await p.locator('.q h1').innerText()) === 'כמה מהר?', 'החמשה: גרירה על קו עוברת לשלב שלו');
@@ -88,7 +90,9 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     // מגבלת בחירות: סגנון עד 2
     await step('סגנון').click();
     await opt("ג'אז").click();
-    ok(await p.locator('.opts [aria-pressed=true]').count() === 2, 'יצירה: בסגנון נשארות שתי בחירות לכל היותר');
+    ok(await p.locator('.opts [aria-pressed=true]').count() === 1 && (await p.locator('[data-testid=picked]').innerText()).includes("ג'אז"), 'יצירה: לחיצה מחליפה את הבחירה, והנבחר כתוב במילים');
+    await add('פופ').click(); await add('רוק').click();
+    ok(await p.locator('.opts [aria-pressed=true]').count() === 2 && await opt('רוק').getAttribute('aria-pressed') === 'true', 'יצירה: "+" מוסיף בחירה, ובסגנון נשארות שתיים לכל היותר');
     // תצוגת "הכול"
     await p.getByRole('button', { name: 'הכול', exact: true }).click(); await tick();
     ok(await p.locator('.rows .row').count() >= 6 && p.url().includes('v=all'), 'יצירה: "הכול" מציג את כל השאלות יחד, והמצב בכתובת');

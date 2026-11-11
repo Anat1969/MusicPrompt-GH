@@ -2,22 +2,22 @@
 :root {
   --paper: #FFFFFF;      /* רקע לבן (סעיף 2.9 ג). גוון נייר רק אם הוא חלק מה-DNA */
   --sheet: #FFFFFF;      /* גיליון */
-  --ink: #1A1A18;        /* דיו */
-  --ink-soft: #6B6A66;
+  --ink: #2E2E2B;        /* דיו */
+  --ink-soft: #74736E;
   --ink-mute: #8A8984;
   --rule: #E5E4E0;
   --rule-soft: #F0EFEB;
-  --bank: #1D9E75;       /* ירוק־מוכן: הועתק, נשמר, כלים */
+  --bank: #559C86;       /* ירוק־מוכן: הועתק, נשמר, כלים */
   --bank-deep: #085041;
   --bank-wash: #E1F5EE;
   --cut: #A32D2D;        /* אדום־ניכוי: מה שיורד */
   --cut-wash: #FCEBEB;
-  --rust: #D85A30;
-  --ochre: #BA7517;
-  --employer: #534AB7;   /* סגול־מעסיק: מה ששמים לך בצד */
+  --rust: #CC7B5E;
+  --ochre: #B58D4E;
+  --employer: #6F68B5;   /* סגול־מעסיק: מה ששמים לך בצד */
   --employer-wash: #EEEDFE;
-  --sky: #378ADD;
-  --marker: #FFE45C;     /* מרקר תובנה */
+  --sky: #6699CC;
+  --marker: #F7E58E;     /* מרקר תובנה */
   --shadow-1: 0 1px 0 rgba(26, 26, 24, .06), 0 2px 6px rgba(26, 26, 24, .06);
   --shadow-2: 0 2px 0 rgba(26, 26, 24, .08), 0 10px 24px rgba(26, 26, 24, .10);
   --font: "IBM Plex Sans Hebrew", -apple-system, "Segoe UI", system-ui, sans-serif;
@@ -26,7 +26,7 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); }
-body { -webkit-font-smoothing: antialiased; }
+body { -webkit-font-smoothing: antialiased; font-weight: 400; }
 #root { min-height: 100vh; }
 h1, h2, h3 { font-weight: 500; letter-spacing: -0.01em; }
 
