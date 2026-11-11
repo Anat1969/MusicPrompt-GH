@@ -1,7 +1,7 @@
 // מסך היצירה: שאלה אחת בכל שלב מימין, והפרומפט נבנה משמאל, שורה לכל שלב, בעברית ובאנגלית.
 import { useEffect, useMemo, useState } from 'react';
 import { GROUPS, PRESETS, STAFF, group, suggested, type Group, type GroupId, type Selection } from '../data/options';
-import { STYLE_LIMIT, bpmOf, compose, composeParts, composeStyleHe, countPicks, hasVoice, isInstrumental, isMinor, labelsOf, staffPoints, type Prompt } from '../logic/compose';
+import { STYLE_LIMIT, bpmOf, compose, composeParts, composeStyleHe, countPicks, hasVoice, isInstrumental, isMinor, labelsOf, staffPoints, summary, type Prompt } from '../logic/compose';
 import { EMPTY_DRAFT, addSong, getLibrary, setDraft, useDraft, useLibrary } from '../logic/store';
 import { taste } from '../logic/taste';
 import { polish } from '../logic/ai';
@@ -225,9 +225,18 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
         </table>
 
         {empty ? (
-          <div className="empty">
+          <div className="empty starts">
             <strong>עוד אין פרומפט.</strong>
-            <p>כל שלב שעונים עליו מוסיף שורה לטבלה, ומהשורות נבנה הפרומפט.</p>
+            <p>כל שלב שעונים עליו מוסיף שורה לטבלה. אפשר גם להתחיל מדוגמה, ולשנות ממנה:</p>
+            <div className="starts-grid" role="group" aria-label="דוגמאות לפתיחה">
+              {PRESETS.map((p, i) => (
+                <button key={p.id} type="button" className="press start" onClick={() => go('create', { preset: p.id })}>
+                  <span className="num">{String(i + 1).padStart(2, '0')}</span>
+                  <strong>{p.title}</strong>
+                  <span>{summary(p.sel)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="o-blocks scroll-in">

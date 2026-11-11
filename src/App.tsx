@@ -24,6 +24,14 @@ export default function App() {
   // חיווי "נשמר": מופיע בסרגל ובתוך כפתור הלוגו, ונעלם לבד
   const saved = (msg: string) => { setStatus(msg); window.clearTimeout((saved as { t?: number }).t); (saved as { t?: number }).t = window.setTimeout(() => setStatus(''), 2200); };
 
+  // המסך גדל עם החלון: היצירה והספרייה תוכננו ל-1366 על 800, ובחלון גדול יותר הכול מוגדל באותו יחס, כדי שלא יישאר שטח מת.
+  useEffect(() => {
+    const fit = () => document.documentElement.style.setProperty('--z', String(innerWidth <= 900 ? 1 : Math.max(1, Math.min(innerWidth / 1366, innerHeight / 800, 1.7))));
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+
   // פעולות המערכת נמצאות רק בתוך כפתור הלוגו
   useEffect(() => {
     const m = menu.current;

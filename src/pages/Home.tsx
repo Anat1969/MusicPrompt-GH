@@ -86,7 +86,7 @@ export default function Home() {
         </div>
         <figure className="h-film">
           <video controls preload="none" playsInline poster="/demo-poster.jpg" src="/demo.mp4" aria-label="סרטון: מרעיון לפס קול בדקה" />
-          <figcaption><strong>מרעיון לפס קול, בדקה.</strong> הסרטון מצולם מתוך האפליקציה עצמה.</figcaption>
+          <figcaption><strong>מרעיון לפס קול, בדקה.</strong> הסרטון מצולם מתוך האפליקציה עצמה. <span className="src">מוזיקה: Bossa Antigua, קווין מקלאוד (Kevin MacLeod), incompetech.com, רישיון CC BY 4.0.</span></figcaption>
         </figure>
       </section>
 
@@ -95,11 +95,7 @@ export default function Home() {
           <p className="h-kicker">החמשה · <span className="num">{lib.length}</span> בספרייה · <span className="num">{my.loved}</span> אהובים</p>
           <h2 className="h-title">טעם אישי הופך ל<mark className="insight">פס קול</mark>.</h2>
           <p className="h-explain"><Rich>{`כל שיר הוא **קו אחד** שחוצה חמש שאלות: סגנון, אווירה, קצב, קול וכלים. מתוך **${TOTAL_OPTIONS}** אפשרויות, הקו הוא החתימה של השיר.`}</Rich></p>
-          <div className="h-tones">
-            <p className="h-tone t-problem"><b>בעיה</b><span>Suno מבין אנגלית של מפיקים, לא תיאור של טעם.</span></p>
-            <p className="h-tone t-solution"><b>פתרון</b><span>כל בחירה מתורגמת למונח מוזיקלי, ונכנסת לשדה הנכון.</span></p>
-            <p className="h-tone t-insight"><b>תובנה</b><span><mark className="insight">שיר שאהבת מלמד את הפרומפט הבא.</mark></span></p>
-          </div>
+          <p className="h-insight"><span className="label">תובנה</span><span><mark className="insight">שיר שאהבת מלמד את הפרומפט הבא.</mark></span></p>
           <div className="h-cta">
             <button type="button" className="btn press go" onClick={() => go('create')}>יצירת פרומפט</button>
             <button type="button" className="btn press" onClick={() => go('library')}>לספרייה</button>
