@@ -9,7 +9,10 @@ export const KINDS: { id: Kind; he: string; hint: string }[] = [
   { id: 'space', he: 'מרחב מחיה', hint: 'חלל פנים שאפשר לגור בו' },
   { id: 'garment', he: 'בגד', hint: 'בגד אופנתי באותה אווירה' },
 ];
-export type Visual = { distill: string; building: string; space: string; garment: string; engine: 'local' | 'gemini' | 'claude' };
+export type Haiku = Record<Kind, string>;
+export type Visual = { distill: string; building: string; space: string; garment: string; haiku?: Haiku; engine: 'local' | 'gemini' | 'claude' };
+// שלוש מעטפות של אותה אווירה: העיר שמבחוץ, הבית שמבפנים, והבגד שעל הגוף
+export const LAYER: Record<Kind, string> = { building: 'מבחוץ', space: 'מבפנים', garment: 'על הגוף' };
 
 export const PARAMS = 'Documentary realism, Professional architecture photography, 1:1 --ar 1:1 --no text, words, writing, frame divisions';
 
@@ -76,6 +79,33 @@ const USE: Record<string, string> = { work: 'סטודיו לעבודה', walk: '
 
 const first = <T,>(sel: Selection, id: keyof Selection, map: Record<string, T>, fallback: string): T => map[(sel[id] ?? [])[0] ?? fallback] ?? map[fallback];
 
+// הייקו לכל תמונה, לפי האווירה. מקוריים. שלוש שורות קצרות: מבחוץ, מבפנים, על הגוף.
+const HAIKU: Record<string, Haiku> = {
+  calm: { building: 'קיר אחד שקט,\nפתח רחב אל הים:\nהעיר נושמת.', space: 'אור על הרצפה,\nכיסא אחד מחכה.\nאין לאן למהר.', garment: 'בד רך על כתף,\nקפל אחד, לא יותר.\nשקט שלובשים.' },
+  intimate: { building: 'חלון קטן דולק\nבתוך חזית גדולה:\nמישהו בבית.', space: 'פינה של ענבר,\nשני ספלים על השולחן.\nהערב נשאר.', garment: 'צווארון קרוב,\nחום של צמר על העור.\nסוד שנלבש.' },
+  dreamy: { building: 'בניין מתמוסס\nבקצה, אל תוך הערפל.\nאיפה הוא נגמר?', space: 'וילון שקוף נע,\nהחדר צף על אור.\nחלום בצהריים.', garment: 'שכבה על שכבה,\nשקופה כמו מחשבה.\nהגוף כמעט ענן.' },
+  melancholic: { building: 'כיכר רטובה,\nספסל אחד ריק לגמרי.\nהגשם זוכר.', space: 'חדר גדול מדי,\nמנורה אחת דולקת.\nמישהו חסר.', garment: 'מעיל אפור, כבד,\nכיס אחד עם מכתב ישן.\nהולכים לאט.' },
+  nostalgic: { building: 'טיח שהתקלף,\nמרפסת חדשה עליו.\nאז פוגש עכשיו.', space: 'פסי אור מתריס\nעל רצפה מצוירת.\nקיץ של סבתא.', garment: 'שמלה מארון ישן,\nכפתור אחד הוחלף.\nריקוד שחוזר.' },
+  mysterious: { building: 'מעבר חשוך,\nבסופו נקודת אור.\nמי גר שם בפנים?', space: 'דלת פתוחה קצת,\nצל ארוך על השטיח.\nהלילה שואל.', garment: 'ברדס על הפנים,\nנחושת מבריקה בשרוול.\nלא כל דבר נאמר.' },
+  inspiring: { building: 'בסיס נמוך, צנוע,\nוקו אחד עולה גבוה.\nאפשר להתחיל.', space: 'חלון עד התקרה,\nשולחן מול כל הבוקר.\nדף ראשון, ריק.', garment: 'כתפיים זקופות,\nבד בהיר תופס רוח.\nצעד קדימה.' },
+  uplifting: { building: 'שורת קשתות לבנות,\nואחת רוקדת בחוץ.\nהרחוב צוחק.', space: 'צהוב על הקיר,\nדלת פתוחה למרפסת.\nמוזיקה ואורחים.', garment: 'חצאית מסתובבת,\nטורקיז וצהוב לימון.\nהגוף אומר כן.' },
+  dramatic: { building: 'קיר עד השמיים,\nאדם קטן לרגליו.\nהאור חותך.', space: 'תקרה גבוהה, אפלה,\nקרן אחת על השולחן.\nרגע לפני.', garment: 'גלימה שחורה,\nבטנה אדומה נחשפת.\nכניסה אחת.' },
+  energetic: { building: 'קווים אלכסוניים\nרצים לאורך החזית.\nהעיר לא עוצרת.', space: 'מדפים בקצב צפוף,\nכתום חי על מתכת.\nהלב מהיר.', garment: 'רוכסן, כסף, שחור,\nתפר שרץ באלכסון.\nקופצים לרחוב.' },
+};
+
+// מפתח קריאה: איך כל חלק במוזיקה הפך לחלק בתמונה. זו הפרשנות שמוצגת ליד התמונות.
+export function reading(sel: Selection): { from: string; to: string; text: string }[] {
+  const m = first(sel, 'mood', MOOD, 'calm'), g = first(sel, 'genre', GENRE, 'ambient'), t = first(sel, 'tempo', TEMPO, 't80');
+  const inst = (sel.inst ?? []).map((id) => INST[id]).filter(Boolean);
+  return [
+    { from: 'האווירה', to: 'אור', text: m.light },
+    { from: 'הסגנון', to: 'צורה', text: g.form },
+    { from: 'הכלים', to: 'חומר', text: (inst[0] ?? INST.piano).mat },
+    { from: 'הקצב', to: 'מקצב', text: t.rhythm },
+  ];
+}
+export const haikuOf = (v: Visual, sel: Selection): Haiku => v.haiku ?? first(sel, 'mood', HAIKU, 'calm');
+
 export function composeVisual(sel: Selection, title: string): Visual {
   const m = first(sel, 'mood', MOOD, 'calm'), g = first(sel, 'genre', GENRE, 'ambient'), t = first(sel, 'tempo', TEMPO, 't80');
   const inst = (sel.inst ?? []).map((id) => INST[id]).filter(Boolean);
@@ -86,6 +116,7 @@ export function composeVisual(sel: Selection, title: string): Visual {
   const name = title.trim() ? `"${title.trim()}"` : 'השיר';
   return {
     engine: 'local',
+    haiku: first(sel, 'mood', HAIKU, 'calm'),
     distill: `${name} הופך למרחב: ${m.feel} שנבנה מ${m.tension}.`,
     building: `${m.tension}, מבנה עירוני ים תיכוני בקנה מידה בינוני עם ${g.form}, ${mat}, ${m.light}, ${t.rhythm} בחזית, ${t.view}, ${people}, פלטה של ${m.palette}, ${PARAMS}`,
     space: `${m.tension}, ${room} בדירה ים תיכונית עם ${g.form} בקנה מידה של חדר, ${mat} ברצפה, בקיר אחד וברהיט מרכזי אחד, ${m.light} דרך חלון גבוה, ${t.rhythm} במדפים ובפתחים, מבט בגובה ישיבה עם מוקד אחד בנקודת חתך הזהב, ${people}, פלטה של ${m.palette}, ${PARAMS}`,

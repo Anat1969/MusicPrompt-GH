@@ -134,13 +134,20 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     await p.waitForFunction(() => location.hash.startsWith('#/library'));
     ok((await p.locator('.d-title').inputValue()) === AI.title, 'ספרייה: השיר שנשמר פתוח');
     ok((await p.locator('[data-testid=d-he]').innerText()).includes('פופ פולק ישראלי'), 'ספרייה: הניסוח בעברית נשמר עם השיר');
-    ok((await p.locator('.d-tab .msg-solution').innerText()).includes('תרגמתי'), 'ספרייה: נשמר גם מה שהליטוש עשה');
+    ok((await p.locator('[data-testid=d-note]').innerText()).includes('תרגמתי'), 'ספרייה: נשמר גם מה שהליטוש עשה');
+    ok((await p.locator('.stage .st-kicker').innerText()).includes('במה מס') && await p.locator('.st-key p:not(.label)').count() === 4, 'ספרייה כמגזין: לכל שיר במה, עם מפתח של ארבע פרשנויות');
+    const hk = await p.locator('.frame-haiku').evaluateAll((els) => els.map((e) => e.querySelectorAll('span').length));
+    ok(hk.length === 3 && hk.every((n) => n === 3), 'ספרייה כמגזין: הייקו של שלוש שורות לכל תמונה');
+    ok((await p.locator('.frame-eye').allInnerTexts()).join(' ').replace(/\s+/g, ' ').includes('מבחוץ') && (await p.locator('.frame-eye').allInnerTexts()).join(' ').includes('על הגוף'), 'ספרייה כמגזין: שלוש מעטפות, מבחוץ, מבפנים ועל הגוף');
+    ok(!(await p.locator('.st-drawer').isVisible().catch(() => false)), 'ספרייה כמגזין: הטקסט הטכני סגור במגירה');
     // השראה חזותית: שלוש מסגרות ופרומפט לתמונה
     ok(await p.locator('.d-strip .frame').count() === 3, 'ספרייה: שלוש מסגרות, מבנה, מרחב מחיה ובגד');
     await p.locator('.frame[data-kind=garment] figcaption .chip').first().click();
     const vp = await p.evaluate(() => navigator.clipboard.readText());
     ok(vp.includes('בגד אופנתי') && vp.endsWith('--ar 1:1 --no text, words, writing, frame divisions') && vp.includes('Documentary realism'), 'ספרייה: העתקת פרומפט לתמונה, בעברית ועם הפרמטרים הקבועים');
-    ok((await p.locator('[data-testid=d-visual] textarea').inputValue()) === vp && (await p.locator('[data-testid=d-distill]').innerText()).includes('האווירה'), 'ספרייה: הפרומפט לתמונה מוצג ונערך בלשונית שלו');
+    ok((await p.locator('[data-testid=d-visual] textarea').inputValue()) === vp && (await p.locator('[data-testid=d-distill]').innerText()).includes('הופך למרחב') && await p.locator('.st-drawer').isVisible(), 'ספרייה: הפרומפט לתמונה נפתח במגירה ונערך בה');
+    await p.locator('.st-close').click();
+    ok(!(await p.locator('.st-drawer').isVisible().catch(() => false)), 'ספרייה: המגירה נסגרת');
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
     await p.locator('.frame[data-kind=building] input[type=file]').setInputFiles({ name: 'b.png', mimeType: 'image/png', buffer: png });
     await p.locator('.frame[data-kind=building] img').waitFor();

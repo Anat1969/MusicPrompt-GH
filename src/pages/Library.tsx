@@ -4,7 +4,7 @@ import { group } from '../data/options';
 import { staffPoints, summary, labelsOf, composeStyleHe } from '../logic/compose';
 import { STAFF } from '../data/options';
 import { loadAudio, saveAudio, dropAudio, loadImage, saveImage, dropImage, removeSong, updateSong, useLibrary, type Song } from '../logic/store';
-import { KINDS, composeVisual, type Kind } from '../logic/visual';
+import { KINDS, LAYER, composeVisual, haikuOf, reading, type Kind } from '../logic/visual';
 import { polishVisual } from '../logic/ai';
 import { useCloud } from '../logic/cloud';
 import { go, type Route } from '../logic/route';
@@ -65,8 +65,9 @@ function Player({ song }: { song: Song }) {
   );
 }
 
+// לוח אחד על הבמה של השיר: שם המעטפת (מבחוץ, מבפנים, על הגוף), התמונה, וההייקו שמתמצת את האווירה שלה.
 // מסגרת אחת בשלישיית ההשראה: גוררים אליה תמונה, מדביקים, או לוחצים להעלאה. מתחתיה כפתור שמעתיק את הפרומפט שלה.
-function Frame({ song, kind, he, selected, onSelect, prompt }: { song: Song; kind: Kind; he: string; selected: boolean; onSelect: () => void; prompt: string }) {
+function Frame({ song, kind, he, layer, haiku, selected, onSelect, onCopy, prompt }: { song: Song; kind: Kind; he: string; layer: string; haiku: string; selected: boolean; onSelect: () => void; onCopy: () => void; prompt: string }) {
   const [url, setUrl] = useState('');
   const [over, setOver] = useState(false);
   const [msg, setMsg] = useState('');
@@ -94,17 +95,18 @@ function Frame({ song, kind, he, selected, onSelect, prompt }: { song: Song; kin
     window.addEventListener('paste', on);
     return () => window.removeEventListener('paste', on);
   }, [selected, song.id, kind]);
-  const copy = async () => { onSelect(); if (await copyText(prompt)) { setDone(true); setTimeout(() => setDone(false), 1800); } };
+  const copy = async () => { onSelect(); onCopy(); if (await copyText(prompt)) { setDone(true); setTimeout(() => setDone(false), 1800); } };
   return (
     <figure className={`frame${selected ? ' is-sel' : ''}${over ? ' is-over' : ''}`} data-kind={kind}>
+      <p className="frame-eye"><span>{layer}</span><strong>{he}</strong></p>
       <div className="frame-box" role="button" tabIndex={0} aria-label={`מסגרת ${he}. ${url ? 'יש תמונה. לחיצה מחליפה אותה' : 'ריקה. גוררים לכאן תמונה, מדביקים, או לוחצים להעלאה'}`}
         onClick={() => { onSelect(); input.current?.click(); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); input.current?.click(); } }}
         onFocus={onSelect} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onSelect(); void take(e.dataTransfer.files?.[0]); }}>
-        {url ? <img src={url} alt={`${he} בהשראת ${song.title}`} /> : <span className="frame-empty"><strong>{he}</strong><span>{over ? 'משחררים כאן' : selected ? 'גוררים, מדביקים או לוחצים' : 'מסגרת ריקה'}</span></span>}
+        {url ? <img src={url} alt={`${he} בהשראת ${song.title}`} /> : <span className="frame-empty"><strong>{over ? 'משחררים כאן' : 'מקום לתמונה'}</strong><span>גוררים, מדביקים או לוחצים</span></span>}
       </div>
+      <blockquote className="frame-haiku" data-testid={`haiku-${kind}`}>{haiku.split('\n').map((l, i) => <span key={i}>{l}</span>)}</blockquote>
       <figcaption>
-        <span className="frame-he">{he}</span>
         <button type="button" className={`press chip${done ? ' is-done' : ''}`} onClick={copy} title="מעתיק את הפרומפט לתמונה הזו, בעברית">{done ? 'הועתק' : 'העתקת פרומפט'}</button>
         {url && <button type="button" className="press chip" onClick={() => void dropImage(song.id, kind)} aria-label={`הסרת התמונה ממסגרת ${he}`} title="הסרת התמונה">×</button>}
       </figcaption>
@@ -121,7 +123,7 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
   const [confirm, setConfirm] = useState(false);
-  const [tab, setTab] = useState<'prompt' | 'lyrics' | 'visual'>('prompt');
+  const [tab, setTab] = useState<'prompt' | 'lyrics' | 'visual' | 'similar' | null>(null);   // המגירה שפתוחה מעל הבמה
   const [kind, setKind] = useState<Kind>('building');
   const [vbusy, setVbusy] = useState(false);
   const [vsecs, setVsecs] = useState(0);
@@ -142,7 +144,7 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
   }, [lib, sort, filter, q]);
 
   const current = lib.find((s) => s.id === route.params.id) ?? shown.list[0] ?? null;
-  useEffect(() => { setConfirm(false); setVerr(''); }, [current?.id]);
+  useEffect(() => { setConfirm(false); setVerr(''); setTab(null); }, [current?.id]);
   const visual = useMemo(() => current?.visual ?? composeVisual(current?.sel ?? {}, current?.title ?? ''), [current?.visual, current?.sel, current?.title]);
   const enrich = async () => {
     if (!current) return;
@@ -177,18 +179,26 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
     );
   }
 
+  const issue = current ? lib.length - lib.findIndex((x) => x.id === current.id) : 0;
+  const haiku = current ? haikuOf(visual, current.sel) : null;
+  const TABS: { id: 'prompt' | 'lyrics' | 'visual' | 'similar'; he: string }[] = [
+    { id: 'prompt', he: 'הפרומפט באנגלית' }, { id: 'lyrics', he: current?.lyrics ? 'מילים' : 'מילים: אין' },
+    { id: 'visual', he: 'פרומפט לתמונה' }, { id: 'similar', he: `דומים בספרייה (${similar.length})` },
+  ];
+
   return (
     <main className="app-main library">
-      <section className="l-list" aria-label="רשימת השירים">
+      <section className="l-list" aria-label="התפריט: רשימת השירים">
         <header className="l-tools">
-          <h1><span className="num">{lib.length}</span> פרומפטים, <span className="num">{lib.filter((s) => s.loved).length}</span> אהובים</h1>
+          <p className="menu-k">התפריט</p>
+          <h1><span className="num">{lib.length}</span> שירים, <span className="num">{lib.filter((s) => s.loved).length}</span> אהובים</h1>
           <input className="field" type="search" placeholder="חיפוש בכותרת, בסגנון ובתיאור" aria-label="חיפוש בספרייה" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="row-chips" role="group" aria-label="סידור">{SORTS.map((s) => <button key={s.id} type="button" className="press chip" aria-pressed={sort === s.id} onClick={() => setSort(s.id)}>{s.he}</button>)}</div>
           <div className="row-chips" role="group" aria-label="סינון">{FILTERS.map((f) => <button key={f.id} type="button" className={`press chip${f.id === 'all' ? ' is-all' : ''}`} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.he}</button>)}</div>
           <p className="l-by">מסודר: {SORTS.find((s) => s.id === sort)!.by}.</p>
           {cloud.uid
             ? <p className={`l-cloud${cloud.status === 'error' ? ' is-err' : ''}`}>{cloud.status === 'syncing' ? 'מסנכרן עם הענן' : cloud.status === 'error' ? cloud.error : 'שמור בענן, וזמין בכל מכשיר.'} <span className="src" dir="ltr">{cloud.email}</span></p>
-            : <p className="l-cloud is-local">הספרייה שמורה רק במכשיר הזה. <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
+            : <p className="l-cloud is-local">שמור רק במכשיר הזה. <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
         </header>
         <div className="l-items scroll-in">
           {!shown.list.length && <p className="empty">לא נמצא שיר שמתאים. אפשר לנקות את החיפוש או לבחור "הכול".</p>}
@@ -208,81 +218,88 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
         </div>
       </section>
 
-      {current && (
-        <section className="l-detail" aria-label="השיר שנבחר">
-          <header className="d-head">
-            <input className="field d-title" aria-label="כותרת השיר" value={current.title} placeholder="כותרת" onChange={(e) => set({ title: e.target.value })} />
-            <button type="button" className="press btn love" aria-pressed={current.loved} onClick={() => set({ loved: !current.loved })} title="שירים אהובים מלמדים את הטעם שלי">{current.loved ? 'אהבתי' : 'סימון כאהוב'}</button>
+      {current && haiku && (
+        <article className="l-detail stage" aria-label="הבמה של השיר שנבחר">
+          <header className="st-head">
+            <p className="st-kicker">במה מס' <span className="num">{String(issue).padStart(2, '0')}</span> · <span className="num">{day(current.createdAt)}</span> · {summary(current.sel) || 'בלי בחירות'}</p>
+            <div className="d-head">
+              <input className="field d-title" aria-label="כותרת השיר" value={current.title} placeholder="כותרת" onChange={(e) => set({ title: e.target.value })} />
+              <button type="button" className="press btn love" aria-pressed={current.loved} onClick={() => set({ loved: !current.loved })} title="שירים אהובים מלמדים את הטעם שלי">{current.loved ? 'אהבתי' : 'סימון כאהוב'}</button>
+            </div>
+            <p className="st-deck" data-testid="d-distill"><mark className="insight">{visual.distill}</mark></p>
           </header>
-          <div className="d-body">
-            <div className="d-main">
-              <div className="d-staff">
-                <Staff compact ariaLabel={`החתימה של ${current.title}`} lines={[{ id: current.id, title: current.title, points: staffPoints(current.sel) }]} labels={STAFF.map((g) => labelsOf(current.sel, g.id))} />
-              </div>
-              <Player song={current} />
-              <div className="o-tabs" role="tablist" aria-label="מה שנשמר בשיר">
-                {([['prompt', 'הפרומפט, גם בעברית'], ['lyrics', current.lyrics ? 'מילים' : 'מילים: אין'], ['visual', 'פרומפט לתמונה']] as const).map(([id, he]) => (
-                  <button key={id} type="button" role="tab" className="press chip" aria-selected={tab === id} aria-pressed={tab === id} onClick={() => setTab(id)}>{he}</button>
-                ))}
-              </div>
+
+          <div className="d-strip" aria-label="שלוש מעטפות של אותה אווירה">
+            {KINDS.map((k) => (
+              <Frame key={k.id} song={current} kind={k.id} he={k.he} layer={LAYER[k.id]} haiku={haiku[k.id]} selected={kind === k.id} onSelect={() => setKind(k.id)} onCopy={() => setTab('visual')} prompt={visual[k.id]} />
+            ))}
+          </div>
+
+          <aside className="st-page" aria-label="מה יצרנו">
+            <h2>מה יצרנו</h2>
+            <p className="st-lead" data-testid="d-he">{current.styleHe || composeStyleHe(current.sel) || 'אין ניסוח בעברית לשיר הזה.'}</p>
+            {current.desc && <p className="st-desc"><b>כך זה התחיל:</b> "{current.desc}"</p>}
+            {current.note && <p className="st-desc" data-testid="d-note"><b>מה הליטוש עשה:</b> {current.note}</p>}
+            <div className="st-key" aria-label="איך המוזיקה הפכה לתמונה">
+              <p className="label">איך המוזיקה הפכה לתמונה</p>
+              {reading(current.sel).map((r) => <p key={r.from}><b>{r.from}</b><i>הפכה ל{r.to}</i><span>{r.text}</span></p>)}
+            </div>
+            <div className="d-staff">
+              <Staff compact ariaLabel={`החתימה של ${current.title}`} lines={[{ id: current.id, title: current.title, points: staffPoints(current.sel) }]} labels={STAFF.map((g) => labelsOf(current.sel, g.id))} />
+            </div>
+            <Player song={current} />
+          </aside>
+
+          {tab && (
+            <div className="st-drawer" role="region" aria-label="מאחורי הקלעים">
+              <button type="button" className="press chip st-close" onClick={() => setTab(null)} aria-label="סגירת המגירה">×</button>
               <div className="d-tab scroll-in">
-                {tab === 'prompt' && (
-                  <>
-                    <p className="he-read" data-testid="d-he"><b>מה יצרנו, בעברית:</b> {current.styleHe || composeStyleHe(current.sel) || 'אין ניסוח בעברית לשיר הזה.'}</p>
-                    {current.desc && <p className="d-desc"><b>התיאור המקורי:</b> {current.desc}</p>}
-                    {current.note && <p className="msg msg-solution"><b>מה הליטוש עשה:</b> {current.note}</p>}
-                    <CopyBlock testid="d-style" he="באנגלית, מה ש-Suno קיבל" suno="Style of Music" ltr rows={4} value={current.style} onChange={(v) => set({ style: v })} />
-                    {similar.length > 0 && (
-                      <div className="d-similar">
-                        <span className="cb-he">דומים בספרייה</span>
-                        {similar.map(({ s, n }) => (
-                          <button key={s.id} type="button" className="press l-item" onClick={() => go('library', { id: s.id })}>
-                            <strong>{s.title || 'בלי כותרת'}</strong>
-                            <span className="l-tags"><i className="tag">{n === 1 ? 'בחירה משותפת אחת' : `${n} בחירות משותפות`}</i></span>
-                            <span className="l-sum">{summary(s.sel)}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+                {tab === 'prompt' && <CopyBlock testid="d-style" he="באנגלית, מה ש-Suno קיבל" suno="Style of Music" ltr rows={5} value={current.style} onChange={(v) => set({ style: v })} hint="זה הטקסט שהועתק ל-Suno. הניסוח בעברית מופיע על הבמה, תחת מה יצרנו." />}
                 {tab === 'lyrics' && (current.lyrics
                   ? <CopyBlock testid="d-lyrics" he="מילים" suno="Lyrics" rows={9} value={current.lyrics} onChange={(v) => set({ lyrics: v })} />
                   : <p className="o-note"><b>בלי מילים:</b> השיר הזה אינסטרומנטלי, או שהמילים נכתבו ב-Suno.</p>)}
                 {tab === 'visual' && (
                   <>
-                    <p className="he-read" data-testid="d-distill"><b>האווירה שעוברת לתמונה:</b> {visual.distill}</p>
                     <div className="row-chips" role="group" aria-label="איזו תמונה">
-                      {KINDS.map((k) => <button key={k.id} type="button" className="press chip" aria-pressed={kind === k.id} onClick={() => setKind(k.id)} title={k.hint}>{k.he}</button>)}
-                      <button type="button" className="press chip rich" onClick={enrich} disabled={vbusy} title="מודל שפה כותב מחדש את שלושת הפרומפטים, כמוזיקאי, אדריכל ומעצב אופנה, לפי התיאור והפרומפט של השיר">{vbusy ? `מנסח, ${vsecs}` : 'ניסוח עשיר'}</button>
+                      {KINDS.map((k) => <button key={k.id} type="button" className="press chip" aria-pressed={kind === k.id} onClick={() => setKind(k.id)} title={k.hint}>{LAYER[k.id]}: {k.he}</button>)}
+                      <button type="button" className="press chip rich" onClick={enrich} disabled={vbusy} title="מודל שפה כותב מחדש את שלושת הפרומפטים ואת שלושת ההייקו, כמוזיקאי, אדריכל ומעצב אופנה, לפי התיאור והפרומפט של השיר">{vbusy ? `מנסח, ${vsecs}` : 'ניסוח עשיר'}</button>
                       <span className={`tag e-${visual.engine}`}>{visual.engine === 'local' ? 'מהבחירות' : 'ניסוח עשיר · Gemini'}</span>
                     </div>
                     {verr && <p className="msg msg-problem" role="alert">{verr}</p>}
                     <CopyBlock testid="d-visual" he={`פרומפט לתמונה: ${KINDS.find((k) => k.id === kind)!.he}`} suno="Midjourney" rows={7} value={visual[kind]} onChange={(v) => set({ visual: { ...visual, [kind]: v } })}
-                      hint="בעברית, בחמש שכבות: מתח, מקום, חומר, אור וקומפוזיציה. מעתיקים לכלי התמונות, ואת התוצאה גוררים למסגרת משמאל." />
+                      hint="בעברית, בחמש שכבות: מתח, מקום, חומר, אור וקומפוזיציה. מעתיקים לכלי התמונות, ואת התוצאה גוררים למסגרת על הבמה." />
                   </>
                 )}
+                {tab === 'similar' && (similar.length ? (
+                  <div className="d-similar">
+                    {similar.map(({ s, n }) => (
+                      <button key={s.id} type="button" className="press l-item" onClick={() => go('library', { id: s.id })}>
+                        <strong>{s.title || 'בלי כותרת'}</strong>
+                        <span className="l-tags"><i className="tag">{n === 1 ? 'בחירה משותפת אחת' : `${n} בחירות משותפות`}</i></span>
+                        <span className="l-sum">{summary(s.sel)}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : <p className="o-note">אין עדיין שיר אחר בספרייה שחולק בחירות עם השיר הזה.</p>)}
               </div>
             </div>
-            <div className="d-strip" aria-label="השראה חזותית: שלוש מסגרות">
-              <p className="strip-how"><b>שלוש מסגרות.</b> גוררים תמונה, מדביקים, או לוחצים להעלאה.</p>
-              {KINDS.map((k) => (
-                <Frame key={k.id} song={current} kind={k.id} he={k.he} selected={kind === k.id} onSelect={() => { setKind(k.id); setTab('visual'); }} prompt={visual[k.id]} />
-              ))}
+          )}
+
+          <footer className="o-actions st-foot">
+            <div className="o-tabs" role="tablist" aria-label="מאחורי הקלעים">
+              <span className="label">מאחורי הקלעים</span>
+              {TABS.map((t) => <button key={t.id} type="button" role="tab" className="press chip" aria-selected={tab === t.id} aria-pressed={tab === t.id} onClick={() => setTab(tab === t.id ? null : t.id)}>{t.he}</button>)}
             </div>
-          </div>
-          <footer className="o-actions">
             <button type="button" className="press btn go" onClick={() => go('create', { from: current.id })} title="פותח את מסך היצירה עם אותן בחירות, כדי לשנות דבר אחד ולנסות שוב">גרסה חדשה מזה</button>
             {confirm ? (
               <>
-                <span className="c-why">למחוק את "{current.title || 'בלי כותרת'}" ואת קובץ השמע שלו?</span>
+                <span className="c-why">למחוק את "{current.title || 'בלי כותרת'}", את השיר ואת התמונות שלו?</span>
                 <button type="button" className="press btn danger" onClick={() => { void removeSong(current.id); go('library'); }}>כן, מחיקה</button>
                 <button type="button" className="press btn" onClick={() => setConfirm(false)}>ביטול</button>
               </>
             ) : <button type="button" className="press btn" onClick={() => setConfirm(true)}>מחיקה</button>}
-            <span className="d-meta">נוצר ב-<span className="num">{day(current.createdAt)}</span> · {current.engine === 'local' ? 'מהבחירות' : 'ליטוש חכם'}</span>
           </footer>
-        </section>
+        </article>
       )}
     </main>
   );

@@ -39,9 +39,9 @@ const SYSTEM = `אתה מוזיקאי, אדריכל ומעצב אופנה באד
 בלי שמות של אמנים, אדריכלים, מעצבים, מותגים או יצירות. בלי טקסט בתמונה. בלי פנים מזוהות. כל פרומפט 60 עד 110 מילים.
 אל תכתוב את מונחי האנגלית או את הפרמטרים: הם מתווספים אחר כך.
 distill: משפט אחד בעברית, עד 20 מילים, שאומר איזו אווירה עוברת מהשיר אל התמונות. בלי סימן קריאה.
-החזר JSON בלבד.`;
+haikuBuilding, haikuSpace, haikuGarment: הייקו לכל אחת משלוש התמונות. שלוש שורות קצרות בעברית, מופרדות בירידת שורה, בלי חרוז ובלי סימן קריאה. המבנה מדבר על העיר שמבחוץ, המרחב על הבית שמבפנים, והבגד על מה שעל הגוף. תמונה מוחשית אחת בכל הייקו, והשורה השלישית היא התפנית.\nהחזר JSON בלבד.`;
 
-const SCHEMA = { type: 'OBJECT', required: ['distill', 'building', 'space', 'garment'], properties: { distill: { type: 'STRING' }, building: { type: 'STRING' }, space: { type: 'STRING' }, garment: { type: 'STRING' } } };
+const SCHEMA = { type: 'OBJECT', required: ['distill', 'building', 'space', 'garment', 'haikuBuilding', 'haikuSpace', 'haikuGarment'], properties: { distill: { type: 'STRING' }, building: { type: 'STRING' }, space: { type: 'STRING' }, garment: { type: 'STRING' }, haikuBuilding: { type: 'STRING' }, haikuSpace: { type: 'STRING' }, haikuGarment: { type: 'STRING' } } };
 const MODELS = [...new Set([Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash'])];
 
 async function ask(key: string, model: string, user: string) {
@@ -71,6 +71,7 @@ async function ask(key: string, model: string, user: string) {
 
 const clip = (s: unknown, n: number) => String(s ?? '').slice(0, n);
 // הפרמטרים הקבועים מתווספים כאן, כדי שהמודל לא ישנה אותם
+const hk = (s: unknown) => clip(s, 160).split(/\n|\s*\/\s*/).map((l) => l.trim()).filter(Boolean).slice(0, 3).join('\n');
 const seal = (s: unknown) => `${clip(s, 1100).replace(/\s+/g, ' ').replace(/[,.\s]+$/, '').replace(/Documentary realism.*$/i, '').replace(/--\w+.*$/, '').trim()}, ${PARAMS}`;
 
 Deno.serve(async (req) => {
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
   if (!gk) return json({ error: 'הניסוח העשיר לא זמין כרגע.' }, 503);
   try {
     const r = await Promise.any(MODELS.map((m) => ask(gk, m, user)));
-    return json({ distill: clip(r.distill, 220).trim(), building: seal(r.building), space: seal(r.space), garment: seal(r.garment), engine: 'gemini' });
+    return json({ distill: clip(r.distill, 220).trim(), building: seal(r.building), space: seal(r.space), garment: seal(r.garment), haiku: { building: hk(r.haikuBuilding), space: hk(r.haikuSpace), garment: hk(r.haikuGarment) }, engine: 'gemini' });
   } catch {
     return json({ error: 'הניסוח העשיר לא זמין כרגע. הפרומפטים מהבחירות מוכנים, ואפשר לנסות שוב.' }, 503);
   }
