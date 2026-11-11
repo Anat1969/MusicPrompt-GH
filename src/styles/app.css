@@ -1,7 +1,7 @@
 /* פרטיטורה: השכבה הייחודית מעל base.css. תעודת ה-DNA ב-CLAUDE.md.
    צבעי הנושא (סגנון, אווירה, קצב, קול, כלים) מוגדרים פעם אחת ב-src/data/options.ts, ומשם מגיעים לבורר, לחמשה ולמקרא. */
 
-:root { --focus: #534AB7; }
+:root { --focus: #6F68B5; }
 .press:hover { transform: none; }                 /* ריחוף לא מזיז רכיב: רק צל ורקע */
 .press:focus-visible, .field:focus-visible { outline-color: var(--focus); }
 a.press { text-decoration: none; display: inline-flex; align-items: center; }
@@ -77,10 +77,10 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 /* מסך 1, פתיח: הצורך בגדול, הפתרון, והסרטון */
 .h-open { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: center; }
 .h-pitch { display: grid; gap: clamp(6px, 1.2vh, 16px); align-content: center; min-height: 0; }
-.h-pain { margin: 0; font-size: clamp(32px, min(5vw, 8vh), 100px); line-height: 1.02; font-weight: 700; letter-spacing: -0.025em; }
+.h-pain { margin: 0; font-size: clamp(32px, min(5vw, 8vh), 100px); line-height: 1.02; font-weight: 500; letter-spacing: -0.025em; }
 .h-pains, .h-fixes { margin: 0; padding: 0; list-style: none; display: grid; gap: clamp(4px, .7vh, 8px); }
 .h-pains li { font-size: clamp(14.5px, min(1.4vw, 2.25vh), 25px); line-height: 1.45; padding: clamp(6px, .9vh, 12px) clamp(12px, 1.2vw, 20px); border-inline-start: 4px solid var(--cut); background: var(--cut-wash); }
-.h-fix { margin: clamp(2px, .8vh, 12px) 0 0; font-size: clamp(21px, min(2.5vw, 4.2vh), 46px); font-weight: 700; letter-spacing: -0.015em; color: var(--bank-deep); }
+.h-fix { margin: clamp(2px, .8vh, 12px) 0 0; font-size: clamp(21px, min(2.5vw, 4.2vh), 46px); font-weight: 500; letter-spacing: -0.015em; color: var(--bank-deep); }
 .h-fixes li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(10px, 1vw, 18px); align-items: center; font-size: clamp(14.5px, min(1.4vw, 2.25vh), 25px); line-height: 1.45; padding: clamp(6px, .9vh, 12px) clamp(12px, 1.2vw, 20px); border-inline-start: 4px solid var(--bank); background: var(--bank-wash); }
 .h-fixes .num { width: 1.9em; height: 1.9em; display: grid; place-items: center; background: var(--bank-deep); color: #fff; font-size: .9em; }
 .h-film { margin: 0; display: grid; gap: 10px; align-content: center; }
@@ -109,7 +109,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 
 /* מסך 3, מה בפנים: מפת התוכן, והפואטיקה על במה כהה */
 .h-inside { grid-template-rows: auto auto minmax(0, 1fr) auto; }
-.h-inside-t { margin: 0; font-size: clamp(28px, min(3.8vw, 7.5vh), 76px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+.h-inside-t { margin: 0; font-size: clamp(28px, min(3.8vw, 7.5vh), 76px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.05; }
 .h-inside .h-cards, .h-inside .h-museum { grid-column: auto; gap: clamp(10px, 1.2vw, 20px); }
 .home .h-card { padding: clamp(14px, 1.5vw, 28px); gap: 4px 16px; }
 .home .h-card .label { font-family: var(--font); font-size: clamp(12px, .9vw, 15px); letter-spacing: 0; text-transform: none; }
@@ -163,14 +163,14 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .step.is-done .step-v { color: var(--ink-soft); }
 /* "איפה אני" אינו "מה בחרתי": השלב הנוכחי מסומן בקו עבה ובמסגרת, ושחור מלא שמור לבחירה ולפעולה */
 .step[aria-current="step"] { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), inset 0 -6px 0 var(--ink); }
-.step[aria-current="step"] .step-t { font-weight: 700; }
+.step[aria-current="step"] .step-t { font-weight: 500; }
 .steps-tools { display: flex; gap: 8px; align-items: center; }
 .btn.nav { width: 84px; padding-inline: 0; }
 
 /* השאלה המבודדת */
 .c-in { display: flex; flex-direction: column; gap: 8px; }
 .q { display: flex; flex-direction: column; gap: 8px; flex: 0 1 auto; min-height: 0; overflow: auto; padding: 2px; }
-.q h1 { margin: 0; font-size: clamp(24px, 2.6vw, 38px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.q h1 { margin: 0; font-size: clamp(24px, 2.6vw, 38px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; }
 .q-kicker { margin: 0; font-size: 12.5px; color: var(--ink-mute); display: flex; align-items: center; gap: 6px; }
 .q-how { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); max-width: 62em; }
 .q-how b { color: var(--ink); }
@@ -196,7 +196,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .staff.is-live .staff-note { stroke-width: 2.5; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(26, 26, 24, .3)); }
 .staff.is-live .staff-tick { opacity: .35; }
 .staff-band { fill: #FFF9D6; }
-.staff-row.is-focus .staff-name { font-weight: 700; fill: var(--ink); }
+.staff-row.is-focus .staff-name { font-weight: 500; fill: var(--ink); }
 .staff-row.is-focus .staff-rule { opacity: .6; }
 .staff-ghost circle { fill: #fff; stroke-width: 2.5; stroke-dasharray: 3 3; pointer-events: none; }
 .staff-ghost text { pointer-events: none; }
@@ -225,7 +225,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .o-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--rule); padding-top: 8px; }
 .o-tabs .num { font-size: 11px; opacity: .7; }
 .c-in, .c-out, .l-list, .l-detail { background: #fff; box-shadow: var(--shadow-1); padding: clamp(10px, 1.2vw, 16px); display: flex; flex-direction: column; gap: clamp(6px, 1vh, 12px); min-height: 0; }
-.c-head h1, .o-head h2, .l-tools h1 { margin: 0; font-size: clamp(20px, 1.9vw, 26px); font-weight: 700; letter-spacing: -0.01em; }
+.c-head h1, .o-head h2, .l-tools h1 { margin: 0; font-size: clamp(20px, 1.9vw, 26px); font-weight: 500; letter-spacing: -0.01em; }
 .c-head p { margin: 2px 0 0; font-size: 14px; color: var(--ink-soft); }
 .rows { display: grid; }
 .row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: center; min-height: 40px; border-bottom: 1px solid var(--rule-soft); padding: 4px 0; }
@@ -329,7 +329,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .empty p { margin: 0; }
 .lib-empty { place-items: center; }
 .empty.big { max-width: 520px; background: #fff; box-shadow: var(--shadow-1); padding: 32px; flex: none; }
-.empty.big h1 { margin: 0; font-size: clamp(26px, 3vw, 42px); font-weight: 700; }
+.empty.big h1 { margin: 0; font-size: clamp(26px, 3vw, 42px); font-weight: 500; }
 .empty.big p { font-size: 16px; line-height: 1.6; }
 
 /* הספרייה: רשימה ביחס זהוב מול השיר */
@@ -364,7 +364,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .l-sum { font-size: 12px; color: var(--ink-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .l-date { font-size: 11px; font-weight: 400; color: var(--ink-mute); }
 .d-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-.d-title { font-size: clamp(18px, 1.7vw, 24px); font-weight: 700; padding: 6px 10px; border-color: transparent; }
+.d-title { font-size: clamp(18px, 1.7vw, 24px); font-weight: 500; padding: 6px 10px; border-color: transparent; }
 .d-title:hover { border-color: var(--rule); }
 .love { min-width: 112px; }
 .love[aria-pressed="true"] { background: var(--marker); color: var(--ink); }
@@ -384,7 +384,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .login-back { position: fixed; inset: 0; z-index: 40; background: rgba(26, 26, 24, .35); display: grid; place-items: center; padding: 16px; }
 .login { width: min(400px, 100%); background: #fff; box-shadow: var(--shadow-2); padding: 24px; display: grid; gap: 8px; }
 .login header { display: flex; justify-content: space-between; align-items: center; }
-.login h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.login h2 { margin: 0; font-size: 22px; font-weight: 500; }
 .login p { margin: 0 0 4px; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
 .login label { font-size: 13px; font-weight: 600; margin-top: 4px; }
 .login .field { width: 100%; }
@@ -472,7 +472,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .opt[aria-pressed="true"]::before { position: absolute; inset-inline-start: 14px; top: calc(50% - 10px); }
 .chip.pick[aria-pressed="true"]::before { width: 5px; height: 10px; border-width: 0 2px 2px 0; margin-inline-end: 8px; margin-bottom: 1px; }
 .opt:active, .chip.pick:active { outline: 3px solid var(--marker); outline-offset: -3px; }
-.opt-add, .chip-add { display: grid; place-items: center; background: #fff; color: var(--ink); font-weight: 700; border: 0; cursor: pointer; margin-inline-start: 0; background: #E2E1DB; box-shadow: var(--shadow-1); }
+.opt-add, .chip-add { display: grid; place-items: center; background: #fff; color: var(--ink); font-weight: 500; border: 0; cursor: pointer; margin-inline-start: 0; background: #E2E1DB; box-shadow: var(--shadow-1); }
 .opt-add { width: 30px; font-size: 20px; }
 .chip-add { width: 22px; font-size: 15px; }
 .opt-add:hover, .chip-add:hover { background: var(--marker); }
@@ -485,3 +485,9 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .q { gap: 6px; }
 .rail { padding: 10px 16px; }
 @media (max-width: 900px) { .create, .library, .lib-empty { gap: 14px; padding: 12px; } }
+
+/* עידון (בקשת ענת, 11.11.2026: "פונט עדין"): כותרות גדולות במשקל דק, הדגשה במשקל בינוני, דיו רך וצבעים מעומעמים */
+.h-pain, .h-inside-t, .h-title, .q h1, .empty.big h1 { font-weight: 300; letter-spacing: -0.015em; }
+.h-fix, .c-head h1, .o-head h2, .l-tools h1 { font-weight: 400; }
+strong, b { font-weight: 600; }
+.opt strong, .start strong, .l-item strong, .step-t { font-weight: 500; }

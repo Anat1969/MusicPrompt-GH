@@ -16,7 +16,7 @@ export type Group = {
 
 export const GROUPS: Group[] = [
   {
-    id: 'genre', he: 'סגנון', ask: 'מאיזה עולם המוזיקה', how: 'הסגנון נכנס ראשון לפרומפט, וקובע את כל השאר. שתי בחירות יוצרות שילוב בין שני עולמות.', color: '#534AB7', max: 2, staff: true,
+    id: 'genre', he: 'סגנון', ask: 'מאיזה עולם המוזיקה', how: 'הסגנון נכנס ראשון לפרומפט, וקובע את כל השאר. שתי בחירות יוצרות שילוב בין שני עולמות.', color: '#6F68B5', max: 2, staff: true,
     options: [
       { id: 'classical', he: 'קלאסי', en: 'classical orchestral' },
       { id: 'cinematic', he: 'קולנועי', en: 'cinematic film score' },
@@ -32,7 +32,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'mood', he: 'אווירה', ask: 'מה מרגישים', how: 'האווירה מוסיפה לפרומפט את הרגש. היא משנה את ההרמוניה ואת אופי הנגינה, לא את הכלים.', color: '#D85A30', max: 2, staff: true,
+    id: 'mood', he: 'אווירה', ask: 'מה מרגישים', how: 'האווירה מוסיפה לפרומפט את הרגש. היא משנה את ההרמוניה ואת אופי הנגינה, לא את הכלים.', color: '#CC7B5E', max: 2, staff: true,
     options: [
       { id: 'calm', he: 'רגוע', en: 'calm, peaceful' },
       { id: 'intimate', he: 'אינטימי', en: 'intimate, warm' },
@@ -47,7 +47,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'tempo', he: 'קצב', ask: 'כמה מהר', how: 'הקצב נכנס לפרומפט כמספר פעימות בדקה. אפשר לשמוע אותו לפני שבוחרים.', color: '#BA7517', max: 1, staff: true,
+    id: 'tempo', he: 'קצב', ask: 'כמה מהר', how: 'הקצב נכנס לפרומפט כמספר פעימות בדקה. אפשר לשמוע אותו לפני שבוחרים.', color: '#B58D4E', max: 1, staff: true,
     options: [
       { id: 't60', he: 'איטי מאוד', en: 'very slow tempo, 60 BPM', bpm: 60 },
       { id: 't80', he: 'איטי', en: 'slow tempo, 80 BPM', bpm: 80 },
@@ -58,7 +58,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'voice', he: 'קול', ask: 'מי שר, אם בכלל', how: 'הקול קובע אם יש שירה ומי שר. "בלי מילים" מוסיף לפרומפט הוראה מפורשת בלי שירה, ושדה המילים נשאר ריק.', color: '#378ADD', max: 1, staff: true,
+    id: 'voice', he: 'קול', ask: 'מי שר, אם בכלל', how: 'הקול קובע אם יש שירה ומי שר. "בלי מילים" מוסיף לפרומפט הוראה מפורשת בלי שירה, ושדה המילים נשאר ריק.', color: '#6699CC', max: 1, staff: true,
     options: [
       { id: 'instrumental', he: 'בלי מילים', en: 'instrumental, no vocals' },
       { id: 'female', he: 'זמרת', en: 'female vocals' },
@@ -69,7 +69,7 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    id: 'inst', he: 'כלים', ask: 'מה מנגן', how: 'הכלים נכנסים לפרומפט כרשימה של כלים מובילים. עד 4, כדי ש-Suno לא יתפזר.', color: '#1D9E75', max: 4, staff: true,
+    id: 'inst', he: 'כלים', ask: 'מה מנגן', how: 'הכלים נכנסים לפרומפט כרשימה של כלים מובילים. עד 4, כדי ש-Suno לא יתפזר.', color: '#559C86', max: 4, staff: true,
     options: [
       { id: 'piano', he: 'פסנתר', en: 'piano' },
       { id: 'strings', he: 'כלי קשת', en: 'string section' },

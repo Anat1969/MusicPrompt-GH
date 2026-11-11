@@ -53,7 +53,7 @@ export function CopyBlock({ he, suno, value, onChange, rows, ltr, hint, limit, t
     if (first.current) { first.current = false; return; }
     if (typing.current) { typing.current = false; return; }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    box.current?.animate([{ background: '#FFE45C' }, { background: '#fff' }], { duration: 700, easing: 'ease-out' });
+    box.current?.animate([{ background: '#F7E58E' }, { background: '#fff' }], { duration: 700, easing: 'ease-out' });
   }, [value]);
   const copy = async () => { if (await copyText(value)) { setDone(true); setTimeout(() => setDone(false), 1800); } };
   const over = limit != null && value.length > limit;
