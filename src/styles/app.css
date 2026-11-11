@@ -200,36 +200,57 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .o-blocks { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-inline-end: 2px; }
 .o-blocks .cb[data-testid="lyrics"] { flex: 1; grid-template-rows: auto minmax(84px, 1fr) auto; min-height: 0; }
 .o-blocks .cb[data-testid="lyrics"] .cb-text { height: 100%; }
-.d-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(150px, 15vw, 200px); gap: 16px; }
-.d-main { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
-.d-main .d-staff { height: clamp(96px, 15vh, 140px); }
-.d-tab { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 2px; }
-.d-tab .cb[data-testid="d-lyrics"], .d-tab .cb[data-testid="d-visual"] { flex: 1; grid-template-rows: auto minmax(96px, 1fr) auto; min-height: 0; }
-.d-tab .cb[data-testid="d-lyrics"] .cb-text, .d-tab .cb[data-testid="d-visual"] .cb-text { height: 100%; }
-.chip.rich { background: var(--ink); color: #fff; margin-inline-start: auto; }
-.chip.rich:hover { background: #000; color: #fff; }
-
-/* שלישיית ההשראה: שלוש מסגרות ריבועיות בפס אנכי, כמו פילם. זו החתימה החזותית של כל שיר */
-.d-strip { display: flex; flex-direction: column; gap: 8px; min-height: 0; background: var(--ink); padding: 10px; }
-.strip-how { margin: 0; font-size: 11.5px; line-height: 1.4; color: rgba(255, 255, 255, .72); }
-.strip-how b { color: #fff; }
-.frame { margin: 0; flex: 1 1 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 4px; }
-.frame-box { min-height: 0; background: #2A2A27; display: grid; place-items: center; cursor: pointer; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; transition: outline-color .15s, background .15s; }
-.frame-box:focus-visible { outline-color: var(--marker); }
-.frame.is-sel .frame-box { outline-color: var(--marker); }
+/* הספרייה כמגזין: מימין התפריט, ומשמאל "במה" לכל שיר. כותרת גדולה, שלוש מעטפות עם הייקו, ועמוד "מה יצרנו" */
+.menu-k { margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-mute); }
+.stage { display: grid; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: clamp(8px, 1.2vh, 16px) clamp(16px, 1.8vw, 32px); position: relative; padding: clamp(12px, 1.6vw, 28px); }
+.st-head { grid-column: 1 / -1; display: grid; gap: 4px; border-bottom: 3px solid var(--ink); padding-bottom: clamp(6px, 1vh, 12px); }
+.st-kicker { margin: 0; font-size: clamp(12px, .9vw, 14px); color: var(--ink-mute); }
+.stage .d-title { font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(30px, 4vw, 72px); font-weight: 500; line-height: 1.05; letter-spacing: -0.01em; padding: 0 4px; }
+.st-deck { margin: 0; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(16px, 1.5vw, 25px); line-height: 1.4; max-width: 46em; }
+.d-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1vw, 16px); min-height: 0; background: var(--ink); padding: clamp(10px, 1.1vw, 18px); }
+.frame { margin: 0; min-height: 0; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; justify-items: stretch; }
+.frame-eye { margin: 0; display: flex; align-items: baseline; gap: 8px; color: #fff; }
+.frame-eye span { font-size: 12px; font-weight: 600; color: var(--marker); }
+.frame-eye strong { font-size: clamp(15px, 1.25vw, 20px); font-weight: 600; }
+.frame-box { min-height: 0; height: 100%; aspect-ratio: 1; max-width: 100%; justify-self: center; background: #2A2A27; display: grid; place-items: center; cursor: pointer; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; transition: outline-color .15s, background .15s; }
+.frame-box:focus-visible, .frame.is-sel .frame-box { outline-color: var(--marker); }
 .frame.is-over .frame-box { background: #4A4636; outline-color: #fff; }
 .frame-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.frame-empty { display: grid; gap: 2px; text-align: center; padding: 6px; color: rgba(255, 255, 255, .55); font-size: 11.5px; }
-.frame-empty strong { font-size: 15px; color: #fff; font-weight: 600; }
+.frame-empty { display: grid; gap: 4px; text-align: center; padding: 8px; color: rgba(255, 255, 255, .5); font-size: 12px; }
+.frame-empty strong { font-size: 14px; color: rgba(255, 255, 255, .85); font-weight: 500; }
+.frame-haiku { margin: 0; display: grid; gap: 1px; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(15px, 1.25vw, 21px); line-height: 1.4; color: #fff; border-inline-start: 2px solid var(--marker); padding-inline-start: 10px; }
+.frame-haiku span { display: block; }
 .frame figcaption { display: flex; gap: 4px; align-items: center; }
-.frame-he { display: none; }
-.frame figcaption .chip { flex: 1; padding: 3px 6px; font-size: 12px; background: #3A3A36; color: #fff; box-shadow: none; }
+.frame figcaption .chip { flex: 1; padding: 4px 8px; font-size: 12.5px; background: #3A3A36; color: #fff; box-shadow: none; }
 .frame figcaption .chip:hover { background: #55554F; }
 .frame figcaption .chip.is-done { background: var(--bank); }
-.frame figcaption .chip:last-child:not(:first-of-type) { flex: 0 0 28px; }
+.frame figcaption .chip + .chip { flex: 0 0 30px; }
 .frame .msg { font-size: 11px; padding: 4px 6px; }
+.st-page { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: clamp(6px, 1vh, 12px); padding-inline-end: 2px; }
+.st-page h2 { margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-mute); }
+.st-lead { margin: 0; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(17px, 1.45vw, 24px); line-height: 1.5; }
+.st-lead::first-letter { font-size: 1.7em; font-weight: 500; line-height: 1; }
+.st-desc { margin: 0; font-size: clamp(13px, 1vw, 15.5px); line-height: 1.55; color: var(--ink-soft); }
+.st-key { display: grid; gap: 4px; border-top: 1px solid var(--rule); padding-top: 8px; }
+.st-key p.label { display: block; margin: 0 0 2px; font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.st-foot .label { font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0; }
+.st-key p { margin: 0; display: grid; grid-template-columns: 62px 84px minmax(0, 1fr); gap: 8px; font-size: clamp(12.5px, .95vw, 14.5px); line-height: 1.45; align-items: baseline; }
+.st-key i { font-style: normal; color: var(--ink-mute); font-size: .92em; }
+.st-key span { color: var(--ink-soft); }
+.st-page .d-staff { flex: none; height: clamp(90px, 13vh, 130px); }
+.st-foot { grid-column: 1 / -1; margin: 0; padding-top: 8px; border-top: 1px solid var(--rule); }
+.st-foot .o-tabs { border: 0; padding: 0; margin-inline-end: auto; }
+.st-foot .label { margin-inline-end: 4px; }
+.st-drawer { position: absolute; inset-inline: 0; bottom: 62px; height: min(52%, 430px); z-index: 6; background: #fff; box-shadow: 0 -12px 28px rgba(26, 26, 24, .16); border-top: 3px solid var(--ink); padding: 12px clamp(12px, 1.6vw, 28px); display: flex; }
+.st-close { position: absolute; top: 8px; inset-inline-end: 12px; z-index: 1; width: 30px; }
+.d-tab { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 2px; padding-inline-end: 44px; }
+.d-tab .cb[data-testid="d-lyrics"], .d-tab .cb[data-testid="d-visual"], .d-tab .cb[data-testid="d-style"] { flex: 1; grid-template-rows: auto minmax(72px, 1fr) auto; min-height: 0; }
+.d-tab .cb .cb-text { height: 100%; }
+.chip.rich { background: var(--ink); color: #fff; margin-inline-start: auto; }
+.chip.rich:hover { background: #000; color: #fff; }
 .d-similar { display: grid; gap: 4px; }
 .d-similar .l-item { margin: 0; background: var(--rule-soft); }
+.d-similar { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .o-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .o-note, .d-desc { margin: 0; font-size: 13.5px; line-height: 1.5; padding: 8px 12px; background: var(--rule-soft); }
 .o-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: auto; padding-top: 4px; }
@@ -257,7 +278,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .empty.big p { font-size: 16px; line-height: 1.6; }
 
 /* הספרייה: רשימה ביחס זהוב מול השיר */
-.library { grid-template-columns: minmax(0, 1fr) minmax(0, 1.618fr); }
+.library { grid-template-columns: clamp(230px, 20vw, 330px) minmax(0, 1fr); }
 .l-tools { display: grid; gap: 8px; }
 .l-tools .field { width: 100%; padding: 8px 12px; }
 .l-by { margin: 0; font-size: 12px; color: var(--ink-mute); }
@@ -347,12 +368,12 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
   .c-staff .staff { height: 230px; }
   .l-items { max-height: 42vh; }
   .o-blocks { overflow: visible; }
-  .d-body { grid-template-columns: minmax(0, 1fr); }
-  .d-strip { flex-direction: row; flex-wrap: wrap; }
-  .strip-how { flex: 1 0 100%; }
-  .frame { flex: 1 1 30%; }
+  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .d-strip { grid-template-columns: minmax(0, 1fr); }
   .frame-box { aspect-ratio: 1; }
-  .d-tab { overflow: visible; }
+  .st-page { overflow: visible; }
+  .st-drawer { position: static; height: auto; box-shadow: none; }
+  .d-tab { overflow: visible; padding-inline-end: 0; }
 }
 @media (max-width: 560px) {
   .brand span { display: inline; }
