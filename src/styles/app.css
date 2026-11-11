@@ -161,9 +161,9 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .step-t { font-size: 13.5px; font-weight: 600; }
 .step-v { font-size: 12px; color: var(--ink-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .step.is-done .step-v { color: var(--ink-soft); }
-.step[aria-current="step"] { background: var(--ink); color: #fff; }
-.step[aria-current="step"] .step-v { color: rgba(255, 255, 255, .75); }
-.step[aria-current="step"] .step-n { outline: 2px solid #fff; }
+/* "איפה אני" אינו "מה בחרתי": השלב הנוכחי מסומן בקו עבה ובמסגרת, ושחור מלא שמור לבחירה ולפעולה */
+.step[aria-current="step"] { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), inset 0 -6px 0 var(--ink); }
+.step[aria-current="step"] .step-t { font-weight: 700; }
 .steps-tools { display: flex; gap: 8px; align-items: center; }
 .btn.nav { width: 84px; padding-inline: 0; }
 
@@ -462,3 +462,26 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 }
 
 @media (max-height: 760px) and (min-width: 901px) { .start span:last-child { display: none; } }
+
+/* בחירה ברורה (תיקון של ענת, 11.11.2026: "בזמן לחיצה לא מובן מה נבחר"): שחור מלא, סימן וי צהוב, ושקיעה. "+" מוסיף בחירה בלי להחליף */
+.opt-w, .chip-w { position: relative; display: inline-flex; }
+.opt-w .opt { height: 100%; }
+.opt[aria-pressed="true"], .chip.pick[aria-pressed="true"] { background: var(--ink); color: #fff; box-shadow: inset 0 0 0 2px var(--ink), inset 0 3px 6px rgba(0, 0, 0, .5); transform: none; }
+.opt[aria-pressed="true"] { padding-inline-start: 38px; }
+.opt[aria-pressed="true"]::before, .chip.pick[aria-pressed="true"]::before { content: ""; display: inline-block; width: 7px; height: 13px; border: solid var(--marker); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+.opt[aria-pressed="true"]::before { position: absolute; inset-inline-start: 14px; top: calc(50% - 10px); }
+.chip.pick[aria-pressed="true"]::before { width: 5px; height: 10px; border-width: 0 2px 2px 0; margin-inline-end: 8px; margin-bottom: 1px; }
+.opt:active, .chip.pick:active { outline: 3px solid var(--marker); outline-offset: -3px; }
+.opt-add, .chip-add { display: grid; place-items: center; background: #fff; color: var(--ink); font-weight: 700; border: 0; cursor: pointer; margin-inline-start: 0; background: #E2E1DB; box-shadow: var(--shadow-1); }
+.opt-add { width: 30px; font-size: 20px; }
+.chip-add { width: 22px; font-size: 15px; }
+.opt-add:hover, .chip-add:hover { background: var(--marker); }
+.q-picked { margin: 0; font-size: 13.5px; line-height: 1.35; }
+.q-picked mark { font-weight: 600; }
+/* רווח בין המסגרות, שלא ייראה עומס */
+.create, .library, .lib-empty { gap: clamp(16px, 1.5vw, 24px); padding: clamp(14px, 1.5vw, 24px); }
+.c-in, .c-out { padding: clamp(12px, 1.2vw, 18px); }
+.c-staff { min-height: 112px; }
+.q { gap: 6px; }
+.rail { padding: 10px 16px; }
+@media (max-width: 900px) { .create, .library, .lib-empty { gap: 14px; padding: 12px; } }

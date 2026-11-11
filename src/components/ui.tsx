@@ -72,14 +72,20 @@ export function CopyBlock({ he, suno, value, onChange, rows, ltr, hint, limit, t
 }
 
 // שורת בוררים לקבוצה אחת. הריבוע הצבעוני הוא אותו סימן שמופיע בחמשה.
-export function ChipRow({ g, picked, onToggle, extra }: { g: Group; picked: string[]; onToggle: (id: string) => void; extra?: ReactNode }) {
+export function ChipRow({ g, picked, onToggle, extra }: { g: Group; picked: string[]; onToggle: (id: string, add?: boolean) => void; extra?: ReactNode }) {
   return (
     <div className="row" role="group" aria-label={g.he}>
       <span className="row-name" title={`${g.ask}. עד ${g.max} בחירות`}><i className="sw" style={{ background: g.color }} />{g.he}</span>
       <div className="row-chips">
-        {g.options.map((o) => (
-          <button key={o.id} type="button" className="press chip" aria-pressed={picked.includes(o.id)} onClick={() => onToggle(o.id)} title={o.en}>{o.he}</button>
-        ))}
+        {g.options.map((o) => {
+          const on = picked.includes(o.id);
+          return (
+            <span key={o.id} className={`chip-w${on ? ' is-on' : ''}`}>
+              <button type="button" className="press chip pick" aria-pressed={on} onClick={() => onToggle(o.id)} title={o.en}>{o.he}</button>
+              {!on && g.max > 1 && picked.length > 0 && <button type="button" className="press chip-add" aria-label={`להוסיף את ${o.he} לבחירה`} title="להוסיף לבחירה, בלי להחליף" onClick={() => onToggle(o.id, true)}>+</button>}
+            </span>
+          );
+        })}
         {extra}
       </div>
     </div>

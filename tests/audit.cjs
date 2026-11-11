@@ -19,6 +19,7 @@ const SEED = [{ id: 's1', createdAt: Date.now() - 86400000 * 2, title: 'בוקר
     for (const [name, hash] of [['lib', '#/library?id=s1'], ['create', '#/create?s=1'], ['create-all', '#/create?v=all']]) {
       await p.goto(BASE + hash, { waitUntil: 'networkidle' }); await p.reload({ waitUntil: 'networkidle' }); await p.waitForTimeout(400);
       const m = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight, iw: innerWidth, ih: innerHeight, z: getComputedStyle(document.documentElement).getPropertyValue('--z') }));
+      if (name === 'create') { await p.locator('.opt').nth(0).click(); await p.locator('.opt-add').nth(1).click(); await p.waitForTimeout(300); }
       console.log(name, JSON.stringify(m));
       await p.screenshot({ path: `${__dirname}/shots/a-${name}-${w}.png` });
     }

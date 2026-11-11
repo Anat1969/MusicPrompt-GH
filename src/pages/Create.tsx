@@ -65,9 +65,10 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
   const styleHe = polished ? draft.styleHe : composeStyleHe(sel);
 
   const setSel = (nextSel: Selection) => { setDraft({ sel: nextSel, ...(draft.engine === 'local' ? { out: null } : {}) }); setSaved(''); };
-  const toggle = (gid: GroupId, id: string) => {
+  // לחיצה מחליפה את הבחירה. "+" מוסיף עוד בחירה באותו תחום. לחיצה על מה שנבחר מסירה אותו.
+  const toggle = (gid: GroupId, id: string, add = false) => {
     const g = group(gid), c = sel[gid] ?? [];
-    const next = c.includes(id) ? c.filter((x) => x !== id) : g.max === 1 ? [id] : c.length >= g.max ? [...c.slice(1), id] : [...c, id];
+    const next = c.includes(id) ? c.filter((x) => x !== id) : !add || g.max === 1 ? [id] : c.length >= g.max ? [...c.slice(1), id] : [...c, id];
     const nextSel: Selection = { ...sel, [gid]: next };
     if (gid === 'voice' && next[0] === 'instrumental') delete nextSel.lang;
     setSel(nextSel);
@@ -119,17 +120,26 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
         <h1>{g.ask}?</h1>
         <p className="q-how"><b>מה זה משנה בפרומפט:</b> {g.how}</p>
         {sug.length > 0 && <p className="q-sug"><mark className="insight">מוצע</mark> לסגנון {labelsOf(sel, 'genre').join(' + ')}: {sug.map((id) => g.options.find((o) => o.id === id)?.he).join(', ')}. <span className="src">מסומנות בקו צהוב, ולא נבחרות לבד.</span></p>}
+        <p className="q-picked" aria-live="polite" data-testid="picked">{picked.length
+          ? <><b>נבחר:</b> <mark className="insight">{labelsOf(sel, g.id).join(' + ')}</mark> <span className="src">{g.max > 1 ? `${picked.length} מתוך ${g.max}. לחיצה מחליפה, "+" מוסיף, ולחיצה על מה שנבחר מסירה.` : 'לחיצה על אפשרות אחרת מחליפה.'}</span></>
+          : <><b>עוד לא נבחר.</b> <span className="src">{g.max > 1 ? `לחיצה בוחרת. אחרי הבחירה הראשונה, "+" מוסיף עוד אחת (עד ${g.max}).` : 'לחיצה בוחרת.'}</span></>}</p>
         <div className="opts" role="group" aria-label={g.he}>
-          {g.options.map((o) => (
-            <button key={o.id} type="button" className={`press opt${sug.includes(o.id) ? ' is-sug' : ''}`} aria-pressed={picked.includes(o.id)} onClick={() => toggle(g.id, o.id)}>
-              <strong>{o.he}</strong><span dir="ltr">{o.en}</span>
-            </button>
-          ))}
+          {g.options.map((o) => {
+            const on = picked.includes(o.id);
+            return (
+              <span key={o.id} className={`opt-w${on ? ' is-on' : ''}`}>
+                <button type="button" className={`press opt${sug.includes(o.id) ? ' is-sug' : ''}`} aria-pressed={on} onClick={() => toggle(g.id, o.id)} title={on ? 'נבחר. לחיצה מסירה' : 'לחיצה בוחרת'}>
+                  <strong>{o.he}</strong><span dir="ltr">{o.en}</span>
+                </button>
+                {!on && g.max > 1 && picked.length > 0 && <button type="button" className="press opt-add" aria-label={`להוסיף את ${o.he} לבחירה`} title="להוסיף לבחירה, בלי להחליף" onClick={() => toggle(g.id, o.id, true)}>+</button>}
+              </span>
+            );
+          })}
           {g.id === 'tempo' && playBtn}
         </div>
         {g.id === 'voice' && voice && (
           <div className="q-sub">
-            <ChipRow g={lang} picked={sel.lang ?? []} onToggle={(id) => toggle('lang', id)} />
+            <ChipRow g={lang} picked={sel.lang ?? []} onToggle={(id, add) => toggle('lang', id, add)} />
             <VoiceArea id="words" label="על מה השיר, או המילים עצמן" rows={2} value={words} onValue={(v) => setDraft({ words: v })} placeholder="למשל: שיר על הים של אשדוד בחורף. אפשר גם להדביק מילים מוכנות" />
           </div>
         )}
@@ -169,7 +179,7 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
             <>
               <VoiceArea id="desc" label="תיאור חופשי או מקור השראה" rows={2} value={desc} onValue={(v) => { setDraft({ desc: v }); setSaved(''); }} placeholder="למשל: בוקר שבת שקט, כמו פסקול של סרט צרפתי ישן, עם אקורדיון רחוק" />
               <div className="rows">
-                {GROUPS.filter((g) => g.id !== 'lang' || voice).map((g) => <ChipRow key={g.id} g={g} picked={sel[g.id] ?? []} onToggle={(id) => toggle(g.id, id)} extra={g.id === 'tempo' ? playBtn : undefined} />)}
+                {GROUPS.filter((g) => g.id !== 'lang' || voice).map((g) => <ChipRow key={g.id} g={g} picked={sel[g.id] ?? []} onToggle={(id, add) => toggle(g.id, id, add)} extra={g.id === 'tempo' ? playBtn : undefined} />)}
               </div>
               {voice && <VoiceArea id="words" label="על מה השיר, או המילים עצמן" rows={2} value={words} onValue={(v) => setDraft({ words: v })} placeholder="למשל: שיר על הים של אשדוד בחורף" />}
             </>
