@@ -185,6 +185,7 @@ const AI = { style: 'Israeli folk pop, warm, 110 BPM, female vocals singing in H
     ok((await p.locator('.suno-link a').getAttribute('href')) === 'https://suno.com/song/abc', 'ספרייה: קישור ל-Suno');
     await p.locator('#suno-url').fill('javascript:alert(1)');
     ok((await p.locator('.suno-link a').getAttribute('href')) === null, 'ספרייה: קישור שאינו של Suno לא נפתח');
+    await p.getByRole('button', { name: 'סידור וסינון' }).click();
     await p.getByRole('button', { name: 'בלי שיר' }).click();
     ok(await p.getByText('לא נמצא שיר שמתאים').isVisible(), 'ספרייה: סינון עם מצב ריק מוסבר');
     await p.getByRole('button', { name: 'הכול' }).click();

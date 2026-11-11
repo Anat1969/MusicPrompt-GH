@@ -104,6 +104,15 @@ export function reading(sel: Selection): { from: string; to: string; text: strin
     { from: 'הקצב', to: 'מקצב', text: t.rhythm },
   ];
 }
+// הגרפיקה של כל לוח נבנית מהשיר: פלטה לפי האווירה, ומספר האלמנטים החוזרים לפי הקצב
+const HEX: Record<string, [string, string, string]> = {
+  calm: ['#E9E2D3', '#B9C2C4', '#5E6B6E'], intimate: ['#3A2A1E', '#C98B3B', '#F1DFC0'], dreamy: ['#CFE0EC', '#EBCFD8', '#8FA3B8'],
+  melancholic: ['#8E9BA8', '#3B4046', '#A9643C'], nostalgic: ['#C96F4A', '#8B8F5A', '#F3E7CF'], mysterious: ['#141B33', '#2C2F38', '#B5763A'],
+  inspiring: ['#EFE6D2', '#9CC3DD', '#D9A93A'], uplifting: ['#FBF7EC', '#2BB3B1', '#F2D43D'], dramatic: ['#111111', '#8E1B1B', '#7C8590'],
+  energetic: ['#F26A21', '#151515', '#C9CDD2'],
+};
+const BEATS: Record<string, number> = { t60: 4, t80: 6, t100: 8, t110: 10, t126: 13, t150: 17 };
+export const artOf = (sel: Selection) => ({ colors: HEX[(sel.mood ?? [])[0] ?? 'calm'] ?? HEX.calm, beats: BEATS[(sel.tempo ?? [])[0] ?? 't80'] ?? 6 });
 export const haikuOf = (v: Visual, sel: Selection): Haiku => v.haiku ?? first(sel, 'mood', HAIKU, 'calm');
 
 export function composeVisual(sel: Selection, title: string): Visual {

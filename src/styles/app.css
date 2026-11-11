@@ -245,22 +245,23 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 /* הספרייה כמגזין: מימין התפריט, ומשמאל "במה" לכל שיר. כותרת גדולה, שלוש מעטפות עם הייקו, ועמוד "מה יצרנו" */
 .menu-k { margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-mute); }
 .stage { display: grid; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: clamp(8px, 1.2vh, 16px) clamp(16px, 1.8vw, 32px); position: relative; padding: clamp(12px, 1.6vw, 28px); }
-.st-head { grid-column: 1 / -1; display: grid; gap: 4px; border-bottom: 3px solid var(--ink); padding-bottom: clamp(6px, 1vh, 12px); }
+.st-head { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); column-gap: clamp(16px, 1.8vw, 32px); gap: 4px clamp(16px, 1.8vw, 32px); border-bottom: 3px solid var(--ink); padding-bottom: clamp(6px, 1vh, 12px); }
 .st-kicker { margin: 0; font-size: clamp(12px, .9vw, 14px); color: var(--ink-mute); }
 .stage .d-title { font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(30px, 4vw, 72px); font-weight: 500; line-height: 1.05; letter-spacing: -0.01em; padding: 0 4px; }
 .st-deck { margin: 0; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(16px, 1.5vw, 25px); line-height: 1.4; max-width: 46em; }
-.d-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1vw, 16px); min-height: 0; background: var(--ink); padding: clamp(10px, 1.1vw, 18px); }
-.frame { margin: 0; min-height: 0; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; justify-items: stretch; }
-.frame-eye { margin: 0; display: flex; align-items: baseline; gap: 8px; color: #fff; }
-.frame-eye span { font-size: 12px; font-weight: 600; color: var(--marker); }
-.frame-eye strong { font-size: clamp(15px, 1.25vw, 20px); font-weight: 600; }
-.frame-box { min-height: 0; height: 100%; aspect-ratio: 1; max-width: 100%; justify-self: center; background: #2A2A27; display: grid; place-items: center; cursor: pointer; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; transition: outline-color .15s, background .15s; }
+.d-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; min-height: 0; background: var(--ink); padding: 8px; }
+.frame { margin: 0; min-height: 0; min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 6px; }
+.frame-box { position: relative; min-height: 0; background: #2A2A27; cursor: pointer; overflow: hidden; outline: 3px solid transparent; outline-offset: -3px; transition: outline-color .15s; }
 .frame-box:focus-visible, .frame.is-sel .frame-box { outline-color: var(--marker); }
-.frame.is-over .frame-box { background: #4A4636; outline-color: #fff; }
-.frame-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.frame-empty { display: grid; gap: 4px; text-align: center; padding: 8px; color: rgba(255, 255, 255, .5); font-size: 12px; }
-.frame-empty strong { font-size: 14px; color: rgba(255, 255, 255, .85); font-weight: 500; }
-.frame-haiku { margin: 0; display: grid; gap: 1px; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(15px, 1.25vw, 21px); line-height: 1.4; color: #fff; border-inline-start: 2px solid var(--marker); padding-inline-start: 10px; }
+.frame.is-over .frame-box { outline-color: #fff; }
+.frame-box img, .plate-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.frame-box img { object-fit: contain; background: #111; }
+.frame-box::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(17, 17, 17, .62) 0, rgba(17, 17, 17, 0) 24%, rgba(17, 17, 17, 0) 46%, rgba(17, 17, 17, .86) 100%); pointer-events: none; }
+.frame-eye { position: absolute; z-index: 1; top: 10px; inset-inline-start: 12px; margin: 0; display: flex; align-items: baseline; gap: 8px; color: #fff; }
+.frame-eye span { font-size: 12px; font-weight: 600; color: var(--marker); }
+.frame-eye strong { font-size: 20px; font-weight: 600; }
+.frame-hint { position: absolute; z-index: 1; top: 12px; inset-inline-end: 12px; max-width: 46%; font-size: 10.5px; line-height: 1.3; color: rgba(255, 255, 255, .7); text-align: end; }
+.frame-haiku { position: absolute; z-index: 1; inset-inline: 12px; bottom: 12px; margin: 0; display: grid; gap: 1px; font-family: "Frank Ruhl Libre", var(--font); font-size: clamp(17px, 1.75vw, 25px); line-height: 1.32; color: #fff; border-inline-start: 3px solid var(--marker); padding-inline-start: 12px; text-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
 .frame-haiku span { display: block; }
 .frame figcaption { display: flex; gap: 4px; align-items: center; }
 .frame figcaption .chip { flex: 1; padding: 4px 8px; font-size: 12.5px; background: #3A3A36; color: #fff; box-shadow: none; }
@@ -279,7 +280,19 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .st-key p { margin: 0; display: grid; grid-template-columns: 62px 84px minmax(0, 1fr); gap: 8px; font-size: clamp(12.5px, .95vw, 14.5px); line-height: 1.45; align-items: baseline; }
 .st-key i { font-style: normal; color: var(--ink-mute); font-size: .92em; }
 .st-key span { color: var(--ink-soft); }
-.st-page .d-staff { flex: none; height: clamp(90px, 13vh, 130px); }
+.st-head > * { grid-column: 1; }
+.st-sign { grid-column: 2; grid-row: 1 / span 3; margin: 0; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; align-self: stretch; }
+.st-sign figcaption { font-size: 12px; font-weight: 600; color: var(--ink-mute); }
+.st-sign .d-staff { min-height: 110px; }
+.frame-hint { opacity: 0; transition: opacity .15s; top: auto; bottom: 46%; inset-inline: 12px; max-width: none; text-align: center; font-size: 12px; background: rgba(17, 17, 17, .7); padding: 6px 8px; }
+.frame-box:hover .frame-hint, .frame-box:focus-visible .frame-hint, .frame.is-over .frame-hint { opacity: 1; }
+/* מצב ריק ביצירה: שש דוגמאות לפתיחה ממלאות את הלוח, במקום שטח ריק */
+.empty.starts { align-content: stretch; grid-template-rows: auto auto minmax(0, 1fr); justify-items: stretch; min-height: 0; }
+.starts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.start { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-content: center; text-align: start; padding: 10px 14px; background: var(--rule-soft); border: 0; font: inherit; color: var(--ink-soft); cursor: pointer; min-height: 0; overflow: hidden; }
+.start .num { grid-row: 1 / span 2; align-self: center; font-size: 22px; color: var(--ink-mute); }
+.start strong { font-size: 17px; color: var(--ink); }
+.start span:last-child { font-size: 12.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .st-foot { grid-column: 1 / -1; margin: 0; padding-top: 8px; border-top: 1px solid var(--rule); }
 .st-foot .o-tabs { border: 0; padding: 0; margin-inline-end: auto; }
 .st-foot .label { margin-inline-end: 4px; }
@@ -320,7 +333,23 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .empty.big p { font-size: 16px; line-height: 1.6; }
 
 /* הספרייה: רשימה ביחס זהוב מול השיר */
-.library { grid-template-columns: clamp(230px, 20vw, 330px) minmax(0, 1fr); }
+/* המסך גדל עם החלון (תיקון של ענת, 11.11.2026: "בזבוז השטח של המסך"). --z נקבע ב-App לפי רוחב וגובה החלון */
+.create, .library, .lib-empty { zoom: var(--z, 1); }
+.library { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+/* התפריט: פס אחד בראש, כמו תוכן עניינים של מגזין. הבמה מקבלת את כל הרוחב */
+.rail { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 14px; }
+.rail .l-tools { display: flex; align-items: baseline; gap: 10px; flex: none; }
+.rail .l-tools h1 { font-size: 16px; }
+.rail .l-items { flex: 1 1 0; min-width: 0; display: flex; gap: 8px; align-items: center; overflow-x: auto; padding: 2px; scrollbar-width: thin; }
+.rail .l-group { display: flex; gap: 6px; align-items: center; flex: none; }
+.rail .l-group h2 { margin: 0; border: 0; padding: 0 4px; font-size: 11.5px; display: inline-flex; gap: 6px; white-space: nowrap; }
+.rail .l-item { width: clamp(170px, 16vw, 240px); height: 46px; margin: 0; padding: 4px 10px; flex: none; }
+.rail .l-item strong { font-size: 14px; }
+.rail .empty { flex: none; padding: 0; font-size: 13px; }
+.l-find { display: flex; gap: 6px; align-items: center; flex: none; }
+.l-find .field { width: 150px; padding: 6px 10px; font-size: 13px; }
+.l-more { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; border-top: 1px solid var(--rule-soft); padding-top: 8px; }
+.l-more p { margin: 0; }
 .l-tools { display: grid; gap: 8px; }
 .l-tools .field { width: 100%; padding: 8px 12px; }
 .l-by { margin: 0; font-size: 12px; color: var(--ink-mute); }
@@ -411,6 +440,9 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
   .l-items { max-height: 42vh; }
   .o-blocks { overflow: visible; }
   .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .st-head { grid-template-columns: minmax(0, 1fr); }
+  .st-sign { grid-column: 1; grid-row: auto; }
+  .starts-grid { grid-template-columns: minmax(0, 1fr); }
   .d-strip { grid-template-columns: minmax(0, 1fr); }
   .frame-box { aspect-ratio: 1; }
   .st-page { overflow: visible; }
@@ -428,3 +460,5 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
   .h-now { flex-direction: column; gap: 0; }
   .c-actions .btn, .o-actions .btn { flex: 1 1 auto; }
 }
+
+@media (max-height: 760px) and (min-width: 901px) { .start span:last-child { display: none; } }

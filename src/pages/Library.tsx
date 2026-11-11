@@ -4,7 +4,8 @@ import { group } from '../data/options';
 import { staffPoints, summary, labelsOf, composeStyleHe } from '../logic/compose';
 import { STAFF } from '../data/options';
 import { loadAudio, saveAudio, dropAudio, loadImage, saveImage, dropImage, removeSong, updateSong, useLibrary, type Song } from '../logic/store';
-import { KINDS, LAYER, composeVisual, haikuOf, reading, type Kind } from '../logic/visual';
+import { KINDS, LAYER, artOf, composeVisual, haikuOf, reading, type Kind } from '../logic/visual';
+import PlateArt from '../components/PlateArt';
 import { polishVisual } from '../logic/ai';
 import { useCloud } from '../logic/cloud';
 import { go, type Route } from '../logic/route';
@@ -98,14 +99,15 @@ function Frame({ song, kind, he, layer, haiku, selected, onSelect, onCopy, promp
   const copy = async () => { onSelect(); onCopy(); if (await copyText(prompt)) { setDone(true); setTimeout(() => setDone(false), 1800); } };
   return (
     <figure className={`frame${selected ? ' is-sel' : ''}${over ? ' is-over' : ''}`} data-kind={kind}>
-      <p className="frame-eye"><span>{layer}</span><strong>{he}</strong></p>
-      <div className="frame-box" role="button" tabIndex={0} aria-label={`מסגרת ${he}. ${url ? 'יש תמונה. לחיצה מחליפה אותה' : 'ריקה. גוררים לכאן תמונה, מדביקים, או לוחצים להעלאה'}`}
+      <div className="frame-box" role="button" tabIndex={0} aria-label={`מסגרת ${he}. ${url ? 'יש תמונה. לחיצה מחליפה אותה' : 'גרפיקה שנבנתה מהשיר. גוררים לכאן תמונה, מדביקים, או לוחצים להעלאה'}`}
         onClick={() => { onSelect(); input.current?.click(); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); input.current?.click(); } }}
         onFocus={onSelect} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); onSelect(); void take(e.dataTransfer.files?.[0]); }}>
-        {url ? <img src={url} alt={`${he} בהשראת ${song.title}`} /> : <span className="frame-empty"><strong>{over ? 'משחררים כאן' : 'מקום לתמונה'}</strong><span>גוררים, מדביקים או לוחצים</span></span>}
+        {url ? <img src={url} alt={`${he} בהשראת ${song.title}`} /> : <PlateArt kind={kind} {...artOf(song.sel)} />}
+        <p className="frame-eye"><span>{layer}</span><strong>{he}</strong></p>
+        {!url && <span className="frame-hint">{over ? 'משחררים כאן' : 'גרפיקה מהשיר. גוררים, מדביקים או לוחצים כדי לשים תמונה'}</span>}
+        <blockquote className="frame-haiku" data-testid={`haiku-${kind}`}>{haiku.split('\n').map((l, i) => <span key={i}>{l}</span>)}</blockquote>
       </div>
-      <blockquote className="frame-haiku" data-testid={`haiku-${kind}`}>{haiku.split('\n').map((l, i) => <span key={i}>{l}</span>)}</blockquote>
       <figcaption>
         <button type="button" className={`press chip${done ? ' is-done' : ''}`} onClick={copy} title="מעתיק את הפרומפט לתמונה הזו, בעברית">{done ? 'הועתק' : 'העתקת פרומפט'}</button>
         {url && <button type="button" className="press chip" onClick={() => void dropImage(song.id, kind)} aria-label={`הסרת התמונה ממסגרת ${he}`} title="הסרת התמונה">×</button>}
@@ -123,6 +125,7 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
   const [filter, setFilter] = useState<Filter>('all');
   const [q, setQ] = useState('');
   const [confirm, setConfirm] = useState(false);
+  const [tools, setTools] = useState(false);
   const [tab, setTab] = useState<'prompt' | 'lyrics' | 'visual' | 'similar' | null>(null);   // המגירה שפתוחה מעל הבמה
   const [kind, setKind] = useState<Kind>('building');
   const [vbusy, setVbusy] = useState(false);
@@ -188,22 +191,15 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
 
   return (
     <main className="app-main library">
-      <section className="l-list" aria-label="התפריט: רשימת השירים">
+      <nav className="l-list rail" aria-label="התפריט: רשימת השירים">
         <header className="l-tools">
           <p className="menu-k">התפריט</p>
           <h1><span className="num">{lib.length}</span> שירים, <span className="num">{lib.filter((s) => s.loved).length}</span> אהובים</h1>
-          <input className="field" type="search" placeholder="חיפוש בכותרת, בסגנון ובתיאור" aria-label="חיפוש בספרייה" value={q} onChange={(e) => setQ(e.target.value)} />
-          <div className="row-chips" role="group" aria-label="סידור">{SORTS.map((s) => <button key={s.id} type="button" className="press chip" aria-pressed={sort === s.id} onClick={() => setSort(s.id)}>{s.he}</button>)}</div>
-          <div className="row-chips" role="group" aria-label="סינון">{FILTERS.map((f) => <button key={f.id} type="button" className={`press chip${f.id === 'all' ? ' is-all' : ''}`} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.he}</button>)}</div>
-          <p className="l-by">מסודר: {SORTS.find((s) => s.id === sort)!.by}.</p>
-          {cloud.uid
-            ? <p className={`l-cloud${cloud.status === 'error' ? ' is-err' : ''}`}>{cloud.status === 'syncing' ? 'מסנכרן עם הענן' : cloud.status === 'error' ? cloud.error : 'שמור בענן, וזמין בכל מכשיר.'} <span className="src" dir="ltr">{cloud.email}</span></p>
-            : <p className="l-cloud is-local">שמור רק במכשיר הזה. <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
         </header>
-        <div className="l-items scroll-in">
+        <div className="l-items" role="list">
           {!shown.list.length && <p className="empty">לא נמצא שיר שמתאים. אפשר לנקות את החיפוש או לבחור "הכול".</p>}
           {shown.groups.map((g) => (
-            <div key={g.name} className="l-group">
+            <div key={g.name} className="l-group" role="listitem">
               <h2>{g.name} <span className="num">{g.items.length}</span></h2>
               {g.items.map((s) => (
                 <button key={s.id} type="button" className="press l-item" aria-pressed={current?.id === s.id} onClick={() => go('library', { id: s.id })}>
@@ -216,7 +212,21 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
             </div>
           ))}
         </div>
-      </section>
+        <div className="l-find">
+          <input className="field" type="search" placeholder="חיפוש שיר" aria-label="חיפוש בספרייה" value={q} onChange={(e) => setQ(e.target.value)} />
+          <button type="button" className="press chip" aria-pressed={tools} onClick={() => setTools((v) => !v)} title="סידור, סינון, וחיבור לענן">סידור וסינון</button>
+        </div>
+        {tools && (
+          <div className="l-more">
+            <div className="row-chips" role="group" aria-label="סידור">{SORTS.map((s) => <button key={s.id} type="button" className="press chip" aria-pressed={sort === s.id} onClick={() => setSort(s.id)}>{s.he}</button>)}</div>
+            <div className="row-chips" role="group" aria-label="סינון">{FILTERS.map((f) => <button key={f.id} type="button" className={`press chip${f.id === 'all' ? ' is-all' : ''}`} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.he}</button>)}</div>
+            <p className="l-by">מסודר: {SORTS.find((s) => s.id === sort)!.by}.</p>
+            {cloud.uid
+              ? <p className={`l-cloud${cloud.status === 'error' ? ' is-err' : ''}`}>{cloud.status === 'syncing' ? 'מסנכרן עם הענן' : cloud.status === 'error' ? cloud.error : 'שמור בענן, וזמין בכל מכשיר.'} <span className="src" dir="ltr">{cloud.email}</span></p>
+              : <p className="l-cloud is-local">שמור רק במכשיר הזה. <button type="button" className="press chip" onClick={onLogin}>כניסה לספרייה בענן</button></p>}
+          </div>
+        )}
+      </nav>
 
       {current && haiku && (
         <article className="l-detail stage" aria-label="הבמה של השיר שנבחר">
@@ -227,6 +237,12 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
               <button type="button" className="press btn love" aria-pressed={current.loved} onClick={() => set({ loved: !current.loved })} title="שירים אהובים מלמדים את הטעם שלי">{current.loved ? 'אהבתי' : 'סימון כאהוב'}</button>
             </div>
             <p className="st-deck" data-testid="d-distill"><mark className="insight">{visual.distill}</mark></p>
+            <figure className="st-sign">
+              <figcaption>החתימה של השיר: קו אחד שחוצה סגנון, אווירה, קצב, קול וכלים</figcaption>
+              <div className="d-staff">
+                <Staff compact ariaLabel={`החתימה של ${current.title}`} lines={[{ id: current.id, title: current.title, points: staffPoints(current.sel) }]} labels={STAFF.map((g) => labelsOf(current.sel, g.id))} />
+              </div>
+            </figure>
           </header>
 
           <div className="d-strip" aria-label="שלוש מעטפות של אותה אווירה">
@@ -243,9 +259,6 @@ export default function Library({ route, onSaved, onLogin }: { route: Route; onS
             <div className="st-key" aria-label="איך המוזיקה הפכה לתמונה">
               <p className="label">איך המוזיקה הפכה לתמונה</p>
               {reading(current.sel).map((r) => <p key={r.from}><b>{r.from}</b><i>הפכה ל{r.to}</i><span>{r.text}</span></p>)}
-            </div>
-            <div className="d-staff">
-              <Staff compact ariaLabel={`החתימה של ${current.title}`} lines={[{ id: current.id, title: current.title, points: staffPoints(current.sel) }]} labels={STAFF.map((g) => labelsOf(current.sel, g.id))} />
             </div>
             <Player song={current} />
           </aside>
