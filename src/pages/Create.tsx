@@ -46,12 +46,19 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
 
   // כניסה מקישור: דוגמה, שיר מהספרייה, או הטעם שלי. אחרי הטעינה עוברים לשלב הראשון של הבחירות.
   useEffect(() => {
-    const { preset, from, taste: t } = route.params;
+    const { preset, from, taste: t, brief, title, back, ref } = route.params;
+    // a collection from Maslul: the brief becomes the description, and the song remembers where to return
+    if (brief) {
+      const okBack = /^https:\/\/(meatsevetofna-gh\.vercel\.app|raw\.githack\.com\/Anat1969\/MeatsevetOfna-GH)\//.test(back ?? '') ? back! : '';
+      setDraft({ ...EMPTY_DRAFT, desc: brief, origin: okBack ? { app: 'maslul', ref: ref ?? '', back: okBack, title: title ?? '' } : undefined });
+      go('create', { s: '0' });
+      return;
+    }
     if (preset) { const p = PRESETS.find((x) => x.id === preset); if (p) setDraft({ ...EMPTY_DRAFT, sel: p.sel }); }
     else if (from) { const s = getLibrary().find((x) => x.id === from); if (s) setDraft({ ...EMPTY_DRAFT, sel: s.sel, desc: s.desc }); }
     else if (t) setDraft({ ...EMPTY_DRAFT, sel: taste(getLibrary()).sel });
     if (preset || from || t) go('create', { s: '1' });
-  }, [route.params.preset, route.params.from, route.params.taste]);
+  }, [route.params.preset, route.params.from, route.params.taste, route.params.brief]);
 
   const base = useMemo(() => compose(sel, desc, words), [sel, desc, words]);
   const parts = useMemo(() => composeParts(sel), [sel]);
@@ -101,7 +108,7 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
     window.open(SUNO, '_blank', 'noopener');
     setTimeout(() => setCopied(false), 4000);
   };
-  const save = () => { const s = addSong({ ...out, desc, sel, engine: draft.engine, styleHe, note: polished ? draft.note : '' }); setSaved(s.id); onSaved('נשמר בספרייה'); };
+  const save = () => { const s = addSong({ ...out, desc, sel, engine: draft.engine, styleHe, note: polished ? draft.note : '', ...(draft.origin ? { origin: draft.origin } : {}) }); setSaved(s.id); onSaved('נשמר בספרייה'); };
   const pulse = () => { if (!bpm) return; setPlaying(true); setTimeout(() => setPlaying(false), playPulse(bpm, isMinor(sel)) || 0); };
   const clear = () => { setDraft(EMPTY_DRAFT); setPolishedSig(''); setError(''); setSaved(''); goStep(0); };
 
@@ -150,6 +157,12 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
 
   return (
     <main className="app-main create">
+      {draft.origin && (
+        <p className="from-app" role="note">
+          <b>תדריך ממסלול:</b> {draft.origin.title || 'קולקציה'}. <span className="src">הפרומפט ייבנה מהתדריך. אחרי השמירה, בספרייה, הקישור ל-Suno חוזר לקולקציה.</span>
+          <a className="press chip" href={draft.origin.back}>חזרה למסלול</a>
+        </p>
+      )}
       <nav className="steps" aria-label="שלבי היצירה">
         <div className="steps-list">
           {STEPS.map((s, i) => {

@@ -86,3 +86,4 @@
 ## בדיקות
 `npm run build && npm test` (קצה לקצה), `node tests/shot.cjs` (צילומים ל-`tests/shots`).
 `MP_EMAIL=... MP_PW=... node tests/cloud.cjs`: סנכרון אמיתי בין שני מכשירים, מול משתמש בדיקה.
+- **חיבור למסלול** (ענת, 16.11.2026): `#/create?brief=…&title=…&ref=<collection>&back=<maslul studio url>` ממלא את התיאור ומציג "תדריך ממסלול". `back` מאומת מול meatsevetofna-gh.vercel.app או raw.githack של המאגר. השיר נשמר עם `origin`, ובספרייה "שליחה למסלול" מחזירה `?suno=&song=&title=` (פעיל רק כשיש קישור Suno).
