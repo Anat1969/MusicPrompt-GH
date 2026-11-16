@@ -21,9 +21,13 @@ export type Song = Prompt & {
   imgs?: Partial<Record<Kind, string>>;   // שמות קובצי התמונה בשלוש המסגרות
   updatedAt?: number;    // לסנכרון: הגרסה החדשה מנצחת
   synced?: boolean;      // כבר קיים בענן. שיר כזה שנעלם מהענן נמחק במכשיר אחר
+  origin?: Origin;       // שיר שנולד מתדריך של אפליקציה אחרת (מסלול), עם הדרך חזרה
 };
 
-export type Draft = { desc: string; words: string; sel: Selection; out: Prompt | null; note: string; styleHe: string; engine: Song['engine'] };
+/** A brief that came from another app: Maslul sends a collection, and the song carries the way back. */
+export type Origin = { app: 'maslul'; ref: string; back: string; title: string };
+
+export type Draft = { desc: string; words: string; sel: Selection; out: Prompt | null; note: string; styleHe: string; engine: Song['engine']; origin?: Origin };
 
 const K_LIB = 'musicprompt.library.v1';
 const K_DRAFT = 'musicprompt.draft.v1';

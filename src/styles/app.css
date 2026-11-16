@@ -491,3 +491,7 @@ a.press { text-decoration: none; display: inline-flex; align-items: center; }
 .h-fix, .c-head h1, .o-head h2, .l-tools h1 { font-weight: 400; }
 strong, b { font-weight: 600; }
 .opt strong, .start strong, .l-item strong, .step-t { font-weight: 500; }
+
+/* a brief from Maslul: one line with the way back */
+.from-app{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 16px;padding:10px 0;border-top:1px solid currentColor;border-bottom:1px solid rgba(0,0,0,.12);font-size:15px}
+.from-app .src{color:#6b6760;font-size:13px}

@@ -62,6 +62,13 @@ function Player({ song }: { song: Song }) {
         <input id="suno-url" className="field" dir="ltr" type="url" placeholder="https://suno.com/song/..." value={song.sunoUrl} onChange={(e) => updateSong(song.id, { sunoUrl: e.target.value.trim() })} />
         <a className={`press chip${/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl) ? '' : ' is-off'}`} href={/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl) ? song.sunoUrl : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl)}>פתיחה ב-Suno</a>
       </div>
+      {song.origin && (
+        <p className="from-app">
+          <b>פס קול לקולקציה במסלול:</b> {song.origin.title || 'קולקציה'}.
+          <a className={`press chip${song.sunoUrl ? '' : ' is-off'}`} href={`${song.origin.back}${song.origin.back.includes('?') ? '&' : '?'}${new URLSearchParams({ suno: song.sunoUrl, song: song.id, title: song.title || '' }).toString()}`} aria-disabled={!song.sunoUrl} title={song.sunoUrl ? 'הקישור ל-Suno עובר לקולקציה' : 'קודם מדביקים את הקישור ל-Suno'}>שליחה למסלול</a>
+          <span className="src">את קובץ השמע מעלים במסלול, בסטודיו של הקולקציה.</span>
+        </p>
+      )}
     </div>
   );
 }
