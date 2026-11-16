@@ -8,6 +8,7 @@ import { KINDS, LAYER, artOf, composeVisual, haikuOf, reading, type Kind } from 
 import PlateArt from '../components/PlateArt';
 import { polishVisual } from '../logic/ai';
 import { useCloud } from '../logic/cloud';
+import { canSend, sendToMaslul } from '../logic/maslul';
 import { go, type Route } from '../logic/route';
 import Staff from '../components/Staff';
 import { CopyBlock, copyText } from '../components/ui';
@@ -62,13 +63,26 @@ function Player({ song }: { song: Song }) {
         <input id="suno-url" className="field" dir="ltr" type="url" placeholder="https://suno.com/song/..." value={song.sunoUrl} onChange={(e) => updateSong(song.id, { sunoUrl: e.target.value.trim() })} />
         <a className={`press chip${/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl) ? '' : ' is-off'}`} href={/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl) ? song.sunoUrl : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!/^https:\/\/(www\.)?suno\.com\//.test(song.sunoUrl)}>פתיחה ב-Suno</a>
       </div>
-      {song.origin && (
-        <p className="from-app">
-          <b>פס קול לקולקציה במסלול:</b> {song.origin.title || 'קולקציה'}.
-          <a className={`press chip${song.sunoUrl ? '' : ' is-off'}`} href={`${song.origin.back}${song.origin.back.includes('?') ? '&' : '?'}${new URLSearchParams({ suno: song.sunoUrl, song: song.id, title: song.title || '' }).toString()}`} aria-disabled={!song.sunoUrl} title={song.sunoUrl ? 'הקישור ל-Suno עובר לקולקציה' : 'קודם מדביקים את הקישור ל-Suno'}>שליחה למסלול</a>
-          <span className="src">את קובץ השמע מעלים במסלול, בסטודיו של הקולקציה.</span>
-        </p>
-      )}
+      {song.origin && <ToMaslul song={song} />}
+    </div>
+  );
+}
+
+// השיר חוזר לקולקציה שממנה בא התדריך: קובץ השמע עצמו, אורכו והקישור ל-Suno. התצוגה במסלול נבנית עליו.
+function ToMaslul({ song }: { song: Song }) {
+  const [step, setStep] = useState('');
+  const [err, setErr] = useState('');
+  const ok = canSend(song);
+  const send = async () => {
+    setErr('');
+    try { location.href = await sendToMaslul(song, setStep); } catch (e) { setErr((e as Error).message); setStep(''); }
+  };
+  return (
+    <div className="from-app">
+      <p><b>פס קול לקולקציה במסלול:</b> {song.origin!.title || 'קולקציה'}.</p>
+      <button type="button" className={`press chip${ok && !step ? '' : ' is-off'}`} disabled={!ok || !!step} onClick={() => void send()}>{step || 'שליחה למסלול'}</button>
+      <span className="src">{!ok ? 'קודם מעלים כאן את קובץ השמע או מדביקים את הקישור ל-Suno.' : song.audioName ? 'השיר עובר לקולקציה, והתצוגה נבנית על האורך שלו.' : 'יעבור רק הקישור. כדי שהשיר ילווה את התצוגה, מעלים כאן את הקובץ.'}</span>
+      {err && <p className="msg msg-problem" role="alert">{err}</p>}
     </div>
   );
 }

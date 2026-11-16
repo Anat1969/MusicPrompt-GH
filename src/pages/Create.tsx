@@ -46,11 +46,11 @@ export default function Create({ route, onSaved }: { route: Route; onSaved: (msg
 
   // כניסה מקישור: דוגמה, שיר מהספרייה, או הטעם שלי. אחרי הטעינה עוברים לשלב הראשון של הבחירות.
   useEffect(() => {
-    const { preset, from, taste: t, brief, title, back, ref } = route.params;
+    const { preset, from, taste: t, brief, title, back, ref, key } = route.params;
     // a collection from Maslul: the brief becomes the description, and the song remembers where to return
     if (brief) {
       const okBack = /^https:\/\/(meatsevetofna-gh\.vercel\.app|raw\.githack\.com\/Anat1969\/MeatsevetOfna-GH)\//.test(back ?? '') ? back! : '';
-      setDraft({ ...EMPTY_DRAFT, desc: brief, origin: okBack ? { app: 'maslul', ref: ref ?? '', back: okBack, title: title ?? '' } : undefined });
+      setDraft({ ...EMPTY_DRAFT, desc: brief, origin: okBack ? { app: 'maslul', ref: ref ?? '', back: okBack, title: title ?? '', ...(/^[0-9a-f]{40}$/.test(key ?? '') ? { key } : {}) } : undefined });
       go('create', { s: '0' });
       return;
     }

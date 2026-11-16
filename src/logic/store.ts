@@ -25,7 +25,7 @@ export type Song = Prompt & {
 };
 
 /** A brief that came from another app: Maslul sends a collection, and the song carries the way back. */
-export type Origin = { app: 'maslul'; ref: string; back: string; title: string };
+export type Origin = { app: 'maslul'; ref: string; back: string; title: string; key?: string };
 
 export type Draft = { desc: string; words: string; sel: Selection; out: Prompt | null; note: string; styleHe: string; engine: Song['engine']; origin?: Origin };
 

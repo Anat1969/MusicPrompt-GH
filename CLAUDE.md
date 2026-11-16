@@ -87,3 +87,4 @@
 `npm run build && npm test` (קצה לקצה), `node tests/shot.cjs` (צילומים ל-`tests/shots`).
 `MP_EMAIL=... MP_PW=... node tests/cloud.cjs`: סנכרון אמיתי בין שני מכשירים, מול משתמש בדיקה.
 - **חיבור למסלול** (ענת, 16.11.2026): `#/create?brief=…&title=…&ref=<collection>&back=<maslul studio url>` ממלא את התיאור ומציג "תדריך ממסלול". `back` מאומת מול meatsevetofna-gh.vercel.app או raw.githack של המאגר. השיר נשמר עם `origin`, ובספרייה "שליחה למסלול" מחזירה `?suno=&song=&title=` (פעיל רק כשיש קישור Suno).
+- **השיר מלווה את התצוגה** (ענת, 16.11.2026): מסלול מוסיף לקישור מפתח חד־פעמי (`key`, נשמר ב-`origin`). "שליחה למסלול" (`src/logic/maslul.ts`) מעלה את קובץ השמע מהספרייה דרך `mo-media` (`handoff_sign`, `handoff_save`), עם האורך שלו והקישור ל-Suno, וחוזרת לסטודיו עם `?sent=1`. שיר בלי מפתח (מלפני השינוי) חוזר בקישור כמו קודם.
